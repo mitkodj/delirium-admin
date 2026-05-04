@@ -1,3 +1,5 @@
+import React from 'react';
+
 export type DiscoLocation = {
   Id: string;
   City: string;

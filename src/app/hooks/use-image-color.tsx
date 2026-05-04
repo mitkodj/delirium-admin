@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ImageColors from 'react-native-image-colors';
 
 export default function useImageColor(imageUrl: string) {

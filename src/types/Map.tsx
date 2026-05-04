@@ -1,3 +1,5 @@
+import React from 'react';
+
 export class Address {
     city: string;
     town: string;

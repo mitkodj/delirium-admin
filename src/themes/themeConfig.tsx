@@ -1,3 +1,4 @@
+import React from 'react';
 import { darkTheme } from "./darkTheme";
 
 const themeVariables = {

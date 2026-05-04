@@ -1,3 +1,4 @@
+import React from 'react';
 import { ThemeColors } from "../types/ThemeTypes";
 
 export const darkTheme: ThemeColors = {

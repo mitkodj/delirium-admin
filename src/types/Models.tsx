@@ -1,3 +1,5 @@
+import React from 'react';
+
 class Genre {
     id: string;
     name: string;
