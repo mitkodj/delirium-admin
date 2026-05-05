@@ -1,3 +1,3 @@
-# night-life-discos-ui
+# Delirium Admin
 
 Well it should start somewhere.
