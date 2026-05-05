@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import themeConfig from '../themes/themeConfig';
-import { getMyClubs, login } from '../utils/service';
+import { fetchSuggestedClubs, login } from '../utils/service';
 import { useSearchFilters } from '../providers/SearchCriteriaContext';
 
 export default function LoginScreen() {
@@ -21,7 +21,7 @@ export default function LoginScreen() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { clubs, setClubs } = useSearchFilters();
+    const { setClubs } = useSearchFilters();
 
     const handleLogin = async () => {
         try {
@@ -29,13 +29,15 @@ export default function LoginScreen() {
             setError(null);
             setLoading(true);
 
-            // const token = await login(username, password);
+            const token = await login(username, password);
 
-            // (global as any).authToken = token;
+            (globalThis as any).authToken = token;
 
             // const clubs = await getMyClubs(token);
+            const clubs = await fetchSuggestedClubs();
 
-            (global as any).myClubs = clubs.slice(0, 1);
+            setClubs(clubs?.data);
+            (globalThis as any).myClubs = clubs?.data.slice(0, 1);
 
             setLoading(false);
 

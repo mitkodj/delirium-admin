@@ -11,6 +11,9 @@ yarn-error.log*
 dist/
 .expo-shared/
 
+# Native
+ios/
+
 # Testing
 coverage/
 .nyc_output/

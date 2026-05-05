@@ -138,7 +138,6 @@ export default function Events({ perPage = 15 }: { perPage: number }) {
                 event={editingEvent ?? undefined}
                 onClose={closeModal}
                 onSave={(data) => {
-                    console.log(data);
                     handleRefresh();
                 }}
             />

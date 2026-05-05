@@ -86,12 +86,12 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
         setFirstName(reservation.firstName);
         setLastName(reservation.lastName);
         setDate(new Date(reservation.reservationDate));
-        setNumberOfPeople(String(reservation.numberOfPeople ?? ''));
+        setNumberOfPeople(String(reservation.clientsCount ?? ''));
         setPhone(reservation.phoneNumber);
         setComment(reservation.comment ?? '');
         setSelectedTable(
-            reservation.table
-                ? { id: reservation.table, label: reservation.table }
+            reservation.tables?.[0]
+                ? { id: reservation.tables[0], label: reservation.tables[0] }
                 : null
         );
         setStatus(reservation.status ?? ReservationStatus.OPEN);
@@ -159,7 +159,7 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
                 firstName,
                 lastName,
                 reservationDate: date.toISOString(),
-                table: selectedTable?.id ?? undefined,
+                tables: selectedTable ? [selectedTable.id] : undefined,
                 phoneNumber: phone,
                 comment: comment || undefined,
                 status,
@@ -173,11 +173,11 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
                     firstName,
                     lastName,
                     reservationDate: date.toISOString(),
-                    table: selectedTable?.id ?? undefined,
+                    tables: selectedTable ? [selectedTable.id] : undefined,
                     phoneNumber: phone,
                     comment: comment || undefined,
                     status,
-                    numberOfPeople: numberOfPeople ? parseInt(numberOfPeople, 10) : reservation!.numberOfPeople,
+                    clientsCount: numberOfPeople ? parseInt(numberOfPeople, 10) : reservation!.clientsCount,
                 };
             } else {
                 const res = await createReservation(payload);

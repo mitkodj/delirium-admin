@@ -17,44 +17,7 @@ import { useSidebar } from '../../providers/SidebarContext';
 import { useClubData } from '../../providers/ClubDataContext';
 import { getReservations } from '../../utils/service';
 
-// ── Fake data pool ────────────────────────────────────────────────────────────
-
-const FAKE_POOL: Reservation[] = [
-    { id: '1',  firstName: 'Emma',      lastName: 'Johnson',   reservationDate: '2026-04-29T20:03:31.456143Z', table: 'VIP 1',   numberOfPeople: 4, phoneNumber: '+1 555 0101', comment: 'Birthday celebration, please prepare a cake', status: ReservationStatus.CANCELLED },
-    { id: '2',  firstName: 'Liam',      lastName: 'Williams',  reservationDate: '2026-04-19T21:30:00', table: 'VIP 2',   numberOfPeople: 6, phoneNumber: '+1 555 0102', comment: 'Anniversary dinner',                          status: ReservationStatus.OPEN },
-    { id: '3',  firstName: 'Sophia',    lastName: 'Brown',     reservationDate: '2026-04-19T22:00:00', table: 'Table 1', numberOfPeople: 2, phoneNumber: '+1 555 0103',                                                          status: ReservationStatus.OPEN },
-    { id: '4',  firstName: 'Noah',      lastName: 'Jones',     reservationDate: '2026-04-20T20:30:00', table: 'Table 2', numberOfPeople: 3, phoneNumber: '+1 555 0104', comment: 'Vegetarian menu requested',                    status: ReservationStatus.CANCELLED },
-    { id: '5',  firstName: 'Olivia',    lastName: 'Garcia',    reservationDate: '2026-04-29T20:03:31.456143Z', table: 'VIP 3',   numberOfPeople: 5, phoneNumber: '+1 555 0105',                                                          status: ReservationStatus.OPEN },
-    { id: '6',  firstName: 'James',     lastName: 'Miller',    reservationDate: '2026-04-20T22:30:00', table: 'Table 3', numberOfPeople: 2, phoneNumber: '+1 555 0106', comment: 'Quiet corner preferred',                       status: ReservationStatus.OPEN },
-    { id: '7',  firstName: 'Ava',       lastName: 'Davis',     reservationDate: '2026-04-21T20:00:00', table: 'VIP 4',   numberOfPeople: 8, phoneNumber: '+1 555 0107', comment: 'Corporate event, need AV equipment',           status: ReservationStatus.SEATED },
-    { id: '8',  firstName: 'William',   lastName: 'Rodriguez', reservationDate: '2026-04-21T21:00:00', table: 'Table 4', numberOfPeople: 3, phoneNumber: '+1 555 0108',                                                          status: ReservationStatus.OPEN },
-    { id: '9',  firstName: 'Isabella',  lastName: 'Martinez',  reservationDate: '2026-04-21T22:00:00', table: 'Table 5', numberOfPeople: 2, phoneNumber: '+1 555 0109', comment: 'Allergic to shellfish',                        status: ReservationStatus.CANCELLED },
-    { id: '10', firstName: 'Benjamin',  lastName: 'Hernandez', reservationDate: '2026-04-22T20:30:00', table: 'VIP 5',   numberOfPeople: 6, phoneNumber: '+1 555 0110',                                                          status: ReservationStatus.OPEN },
-    { id: '11', firstName: 'Mia',       lastName: 'Lopez',     reservationDate: '2026-04-22T21:30:00', table: 'Table 6', numberOfPeople: 4, phoneNumber: '+1 555 0111', comment: 'Early seating needed, kids in the party',      status: ReservationStatus.OPEN },
-    { id: '12', firstName: 'Elijah',    lastName: 'Wilson',    reservationDate: '2026-04-22T23:00:00', table: 'VIP 6',   numberOfPeople: 5, phoneNumber: '+1 555 0112',                                                          status: ReservationStatus.OPEN },
-    { id: '13', firstName: 'Charlotte', lastName: 'Anderson',  reservationDate: '2026-04-23T20:00:00', table: 'Table 7', numberOfPeople: 2, phoneNumber: '+1 555 0113', comment: 'Window table if possible',                     status: ReservationStatus.OPEN },
-    { id: '14', firstName: 'Lucas',     lastName: 'Thomas',    reservationDate: '2026-04-23T21:00:00', table: 'Table 8', numberOfPeople: 3, phoneNumber: '+1 555 0114',                                                          status: ReservationStatus.CANCELLED },
-    { id: '15', firstName: 'Amelia',    lastName: 'Taylor',    reservationDate: '2026-04-23T22:30:00', table: 'VIP 1',   numberOfPeople: 4, phoneNumber: '+1 555 0115', comment: 'Champagne on arrival please',                  status: ReservationStatus.OPEN },
-    { id: '16', firstName: 'Mason',     lastName: 'Moore',     reservationDate: '2026-04-24T20:00:00', table: 'Table 1', numberOfPeople: 2, phoneNumber: '+1 555 0116',                                                          status: ReservationStatus.OPEN },
-    { id: '17', firstName: 'Harper',    lastName: 'Jackson',   reservationDate: '2026-04-24T21:30:00', table: 'VIP 2',   numberOfPeople: 7, phoneNumber: '+1 555 0117', comment: 'Bachelor party — keep it lively',              status: ReservationStatus.OPEN },
-    { id: '18', firstName: 'Ethan',     lastName: 'Martin',    reservationDate: '2026-04-24T22:00:00', table: 'Table 2', numberOfPeople: 3, phoneNumber: '+1 555 0118',                                                          status: ReservationStatus.OPEN },
-    { id: '19', firstName: 'Evelyn',    lastName: 'Lee',       reservationDate: '2026-04-25T20:30:00', table: 'VIP 3',   numberOfPeople: 6, phoneNumber: '+1 555 0119', comment: 'Gluten-free options needed',                   status: ReservationStatus.OPEN },
-    { id: '20', firstName: 'Alexander', lastName: 'Perez',     reservationDate: '2026-04-25T21:00:00', table: 'Table 3', numberOfPeople: 2, phoneNumber: '+1 555 0120',                                                          status: ReservationStatus.OPEN },
-    { id: '21', firstName: 'Abigail',   lastName: 'White',     reservationDate: '2026-04-25T22:30:00', table: 'VIP 4',   numberOfPeople: 5, phoneNumber: '+1 555 0121', comment: 'Surprise party — do not reveal to guest',      status: ReservationStatus.CANCELLED },
-    { id: '22', firstName: 'Henry',     lastName: 'Harris',    reservationDate: '2026-04-26T20:00:00', table: 'Table 4', numberOfPeople: 4, phoneNumber: '+1 555 0122',                                                          status: ReservationStatus.OPEN },
-    { id: '23', firstName: 'Emily',     lastName: 'Sanchez',   reservationDate: '2026-04-26T21:00:00', table: 'VIP 5',   numberOfPeople: 8, phoneNumber: '+1 555 0123', comment: 'Need high chair for toddler',                  status: ReservationStatus.OPEN },
-    { id: '24', firstName: 'Daniel',    lastName: 'Clark',     reservationDate: '2026-04-26T22:00:00', table: 'Table 5', numberOfPeople: 2, phoneNumber: '+1 555 0124',                                                          status: ReservationStatus.OPEN },
-    { id: '25', firstName: 'Elizabeth', lastName: 'Ramirez',   reservationDate: '2026-04-27T20:30:00', table: 'VIP 6',   numberOfPeople: 6, phoneNumber: '+1 555 0125', comment: 'Prefer dimmed lighting',                       status: ReservationStatus.OPEN },
-];
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-
-
-function formatDay(iso: string) {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
 function formatTime(iso: string) {
     const d = new Date(iso);
@@ -180,8 +143,8 @@ function SectionHeader({ label, accent, count, collapsed, onToggle }: {
 
 function ReservationRow({ item, onPress, onEdit }: { item: Reservation; onPress: () => void; onEdit?: () => void }) {
     const { floors } = useClubData();
-    const tableLabel = item.table
-        ? floors.flatMap(f => f.objects).find(o => o.id === item.table)?.label ?? item.table
+    const tableLabel = item.tables?.[0]
+        ? floors.flatMap(f => f.objects).find(o => o.id === item.tables![0])?.label ?? item.tables[0]
         : undefined;
 
     return (
@@ -202,7 +165,7 @@ function ReservationRow({ item, onPress, onEdit }: { item: Reservation; onPress:
 
                 <View style={styles.metaRow}>
                     <Ionicons name="person-outline" size={13} color={themeConfig.text.muted} />
-                    <Text style={styles.metaText}>{item.numberOfPeople}</Text>
+                    <Text style={styles.metaText}>{item.clientsCount}</Text>
                     {item.reservationDate && (
                         <>
                             <View style={styles.metaSpacer} />
@@ -296,8 +259,8 @@ function ReservationDetailModal({
         }
     }, [visible]);
 
-    const tableFloor = reservation?.table
-        ? floors.find(f => f.objects.some(o => o.id === reservation.table))
+    const tableFloor = reservation?.tables?.[0]
+        ? floors.find(f => f.objects.some(o => o.id === reservation.tables![0]))
         : undefined;
 
     const canvasW = Math.max(tableFloor?.width ?? DETAIL_CANVAS_W, DETAIL_CANVAS_W);
@@ -352,14 +315,14 @@ function ReservationDetailModal({
                                 }}>
                                     <FloorCanvas
                                         objects={tableFloor.objects}
-                                        selectedId={reservation?.table ?? null}
+                                        selectedId={reservation?.tables?.[0] ?? null}
                                         width={canvasW}
                                         height={canvasH}
                                         isReadonly
                                         selectOnly
                                         counterRotateLabels={shouldRotate}
                                         tableColorOverrides={tableColorOverrides}
-                                        pulsingTableId={reservation?.table ?? undefined}
+                                        pulsingTableId={reservation?.tables?.[0] ?? undefined}
                                         onDeselect={() => {}}
                                         onSelect={() => {}}
                                         onUpdate={() => {}}
@@ -465,9 +428,9 @@ export default function Reservations() {
     const tableColorOverrides = useMemo<Record<string, string>>(() => {
         const overrides: Record<string, string> = {};
         for (const r of filteredReservations) {
-            if (!r.table || r.status === undefined) continue;
+            if (!r.tables?.[0] || r.status === undefined) continue;
             const color = STATUS_COLOR[r.status];
-            if (color) overrides[r.table] = color;
+            if (color) overrides[r.tables[0]] = color;
         }
         return overrides;
     }, [filteredReservations]);
@@ -497,10 +460,10 @@ export default function Reservations() {
         const active = filteredReservations.filter(r => r.status !== ReservationStatus.CANCELLED);
         const reservationCount = active.length;
         const peopleCount = active.reduce((sum, r) =>
-            sum + (r.numberOfPeople ?? tableCapacity(r.table)), 0);
+            sum + (r.clientsCount ?? tableCapacity(r.tables?.[0])), 0);
         const seatedCount = filteredReservations
             .filter(r => r.status === ReservationStatus.SEATED || r.status === ReservationStatus.GONE)
-            .reduce((sum, r) => sum + (r.numberOfPeople ?? tableCapacity(r.table)), 0);
+            .reduce((sum, r) => sum + (r.clientsCount ?? tableCapacity(r.tables?.[0])), 0);
 
         return [
             { value: reservationCount, label: 'reserv.' },

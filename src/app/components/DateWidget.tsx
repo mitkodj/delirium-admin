@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import styles from '../styles/reausableStyles';
+import styles from '../styles/reusableStyles';
 
 type DateWidgetPropType = {
     day: number;

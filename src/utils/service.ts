@@ -26,7 +26,11 @@ export const fetchGenres = async (filters: GenresRequest | undefined) => {
 };
 
 export const fetchClubs = async (filters: WizardState) => {
-  const { city, date, endDate } = filters;
+  const { city, date, endDate } = filters ?? {
+    city: undefined,
+    date: undefined,
+    endDate: undefined
+  };
 
   const filter = and(
     city ? eq("City", city.City) : "",
@@ -35,6 +39,10 @@ export const fetchClubs = async (filters: WizardState) => {
   );
 
   try {
+    console.log(buildODataQuery({
+        filter,
+        orderBy: "Name asc"
+      }));
     return await axios.get(`${partyService}/api/clubs`, {
       params: buildODataQuery({
         filter,
@@ -270,7 +278,7 @@ export type CreateReservationPayload = {
   firstName: string;
   lastName: string;
   reservationDate: string;
-  table?: string;
+  tables?: string[] | null;
   phoneNumber: string;
   comment?: string;
   status: number;

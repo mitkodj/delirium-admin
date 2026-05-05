@@ -72,8 +72,8 @@ export type Reservation = {
   firstName: string;
   lastName: string;
   reservationDate: string;
-  table?: string;
-  numberOfPeople?: number;
+  tables?: string[] | null;
+  clientsCount?: number;
   phoneNumber: string;
   comment?: string;
   status?: ReservationStatus;
