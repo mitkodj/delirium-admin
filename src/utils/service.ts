@@ -282,6 +282,7 @@ export type CreateReservationPayload = {
   phoneNumber: string;
   comment?: string;
   status: number;
+  clientsCount: number;
 };
 
 export const createReservation = async (payload: CreateReservationPayload) => {

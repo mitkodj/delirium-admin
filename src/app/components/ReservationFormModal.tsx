@@ -39,8 +39,9 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [date, setDate] = useState(new Date());
-    const [numberOfPeople, setNumberOfPeople] = useState('');
-    const [selectedTable, setSelectedTable] = useState<SelectedTable | null>(null);
+    const [clientsCount, setClientsCount] = useState('');
+    const [selectedTables, setSelectedTables] = useState<SelectedTable[]>([]);
+    const [isAddingMore, setIsAddingMore] = useState(false);
     const [phone, setPhone] = useState('');
     const [comment, setComment] = useState('');
     const [status, setStatus] = useState<ReservationStatus>(ReservationStatus.OPEN);
@@ -64,14 +65,20 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
     const phoneValid = phone.length === 0 || PHONE_RE.test(phone);
 
     const allObjects = floors.flatMap(f => f.objects);
-    const resolvedTableLabel = selectedTable
-        ? allObjects.find(o => o.id === selectedTable.id)?.label ?? selectedTable.label
-        : null;
-    const tableCapacity = selectedTable
-        ? allObjects.find(o => o.id === selectedTable.id)?.capacity
-        : undefined;
-    const numPeople = parseInt(numberOfPeople, 10);
-    const capacityExceeded = !!selectedTable && tableCapacity !== undefined && !isNaN(numPeople) && numPeople > tableCapacity;
+    const numPeople = parseInt(clientsCount, 10);
+    const totalCapacity = selectedTables.reduce((sum, t) => {
+        return sum + (allObjects.find(o => o.id === t.id)?.capacity ?? 0);
+    }, 0);
+    const capacityExceeded = selectedTables.length > 0 && !isNaN(numPeople) && numPeople > totalCapacity;
+
+    const resolvedTableLabels = selectedTables.map(t =>
+        allObjects.find(o => o.id === t.id)?.label ?? t.label
+    );
+    const tableFieldText = selectedTables.length === 0
+        ? null
+        : selectedTables.length === 1
+        ? resolvedTableLabels[0]
+        : `${resolvedTableLabels[0]} +${selectedTables.length - 1}`;
 
     const saveBtnEnabled = !!(firstName && lastName && phone && phoneValid && (!capacityExceeded || overrideCapacity));
 
@@ -86,20 +93,18 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
         setFirstName(reservation.firstName);
         setLastName(reservation.lastName);
         setDate(new Date(reservation.reservationDate));
-        setNumberOfPeople(String(reservation.clientsCount ?? ''));
+        setClientsCount(String(reservation.clientsCount ?? ''));
         setPhone(reservation.phoneNumber);
         setComment(reservation.comment ?? '');
-        setSelectedTable(
-            reservation.tables?.[0]
-                ? { id: reservation.tables[0], label: reservation.tables[0] }
-                : null
+        setSelectedTables(
+            reservation.tables?.map(id => ({ id, label: id })) ?? []
         );
         setStatus(reservation.status ?? ReservationStatus.OPEN);
     }, [visible, reservation]);
 
     // Find best-fit table suggestion whenever people count changes
     const suggestedTable = useMemo<FloorObject | null>(() => {
-        const n = parseInt(numberOfPeople, 10);
+        const n = parseInt(clientsCount, 10);
         if (isNaN(n) || n <= 0) return null;
         const allObjects = floors.flatMap(f => f.objects);
         return allObjects.find(o =>
@@ -107,17 +112,17 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
             o.capacity !== undefined &&
             o.capacity === n
         ) ?? null;
-    }, [numberOfPeople, floors]);
+    }, [clientsCount, floors]);
 
     // Auto-fill table field in create mode only (never override an existing selection in edit mode)
     useEffect(() => {
-        if (!isEdit && suggestedTable && !selectedTable) {
-            setSelectedTable({ id: suggestedTable.id, label: suggestedTable.label ?? suggestedTable.id });
+        if (!isEdit && suggestedTable && selectedTables.length === 0) {
+            setSelectedTables([{ id: suggestedTable.id, label: suggestedTable.label ?? suggestedTable.id }]);
         }
     }, [suggestedTable]);
 
-    // Reset capacity-override checkbox whenever people count or table changes
-    useEffect(() => { setOverrideCapacity(false); }, [selectedTable?.id, numberOfPeople]);
+    // Reset capacity-override checkbox whenever tables or people count changes
+    useEffect(() => { setOverrideCapacity(false); }, [selectedTables, clientsCount]);
 
     const formatDate = (d: Date) =>
         d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -149,6 +154,19 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
         if (Platform.OS === 'android') setShowTimePicker(false);
     };
 
+    const handleTableChosen = (t: SelectedTable) => {
+        if (isAddingMore) {
+            setSelectedTables(prev => [...prev, t]);
+        } else {
+            setSelectedTables([t]);
+        }
+        setIsAddingMore(false);
+    };
+
+    const handleRemoveTable = (index: number) => {
+        setSelectedTables(prev => prev.filter((_, i) => i !== index));
+    };
+
     const handleSave = async () => {
         try {
             setError(null);
@@ -159,25 +177,20 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
                 firstName,
                 lastName,
                 reservationDate: date.toISOString(),
-                tables: selectedTable ? [selectedTable.id] : undefined,
+                tables: selectedTables.length > 0 ? selectedTables.map(t => t.id) : undefined,
                 phoneNumber: phone,
                 comment: comment || undefined,
                 status,
+                clientsCount: clientsCount ? parseInt(clientsCount, 10) : 1,
             };
 
             let saved: Reservation;
             if (isEdit) {
+                console.log(payload);
                 await updateReservation(reservation!.id, payload);
                 saved = {
                     ...reservation!,
-                    firstName,
-                    lastName,
-                    reservationDate: date.toISOString(),
-                    tables: selectedTable ? [selectedTable.id] : undefined,
-                    phoneNumber: phone,
-                    comment: comment || undefined,
-                    status,
-                    clientsCount: numberOfPeople ? parseInt(numberOfPeople, 10) : reservation!.clientsCount,
+                    ...payload
                 };
             } else {
                 const res = await createReservation(payload);
@@ -199,8 +212,9 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
         setFirstName('');
         setLastName('');
         setDate(new Date());
-        setNumberOfPeople('');
-        setSelectedTable(null);
+        setClientsCount('');
+        setSelectedTables([]);
+        setIsAddingMore(false);
         setPhone('');
         setComment('');
         setStatus(ReservationStatus.OPEN);
@@ -211,6 +225,14 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
     const handleClose = () => {
         resetForm();
         onClose();
+    };
+
+    // Highlight already-selected tables on the floor map when adding more
+    const selectorColorOverrides: Record<string, string> = {
+        ...(tableColorOverrides ?? {}),
+        ...Object.fromEntries(
+            selectedTables.map(t => [t.id, currentStatusColor ?? themeConfig.accent.primary])
+        ),
     };
 
     return (
@@ -292,32 +314,62 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
                             style={[styles.input, styles.flex1]}
                             placeholder="No. of people"
                             placeholderTextColor={themeConfig.text.muted}
-                            value={numberOfPeople}
-                            onChangeText={v => { setNumberOfPeople(v); if (!isEdit) setSelectedTable(null); }}
+                            value={clientsCount}
+                            onChangeText={v => { setClientsCount(v); if (!isEdit) setSelectedTables([]); }}
                             keyboardType="number-pad"
                         />
                         <View style={styles.rowGap} />
                         <TouchableOpacity
-                            style={[styles.tableField, styles.flex1, selectedTable && styles.tableFieldFilled, capacityExceeded && styles.tableFieldError]}
-                            onPress={() => setShowTableSelector(true)}
+                            style={[styles.tableField, styles.flex1, selectedTables.length > 0 && styles.tableFieldFilled, capacityExceeded && styles.tableFieldError]}
+                            onPress={() => { setIsAddingMore(false); setShowTableSelector(true); }}
                             activeOpacity={0.7}
                         >
-                            <Text style={[styles.tableFieldText, !selectedTable && styles.placeholder]} numberOfLines={1}>
-                                {resolvedTableLabel ?? 'Select table'}
+                            <Text style={[styles.tableFieldText, selectedTables.length === 0 && styles.placeholder]} numberOfLines={1}>
+                                {tableFieldText ?? 'Select table'}
                             </Text>
                             <Ionicons name="chevron-forward" size={14} color={themeConfig.text.muted} />
                         </TouchableOpacity>
                     </View>
 
+                    {/* Selected table chips (when multiple) */}
+                    {selectedTables.length > 1 && (
+                        <View style={styles.chipsRow}>
+                            {selectedTables.map((t, i) => (
+                                <View key={t.id} style={styles.chip}>
+                                    <Text style={styles.chipText} numberOfLines={1}>
+                                        {allObjects.find(o => o.id === t.id)?.label ?? t.label}
+                                    </Text>
+                                    <TouchableOpacity
+                                        onPress={() => handleRemoveTable(i)}
+                                        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
+                                    >
+                                        <Ionicons name="close" size={13} color={themeConfig.text.muted} />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </View>
+                    )}
+
+                    {/* Capacity exceeded: add more tables or override */}
                     {capacityExceeded && (
-                        <TouchableOpacity style={styles.checkboxRow} onPress={() => setOverrideCapacity(v => !v)} activeOpacity={0.7}>
-                            <View style={[styles.checkbox, overrideCapacity && styles.checkboxChecked]}>
-                                {overrideCapacity && <Ionicons name="checkmark" size={13} color={themeConfig.text.inverse} />}
-                            </View>
-                            <Text style={styles.checkboxLabel}>
-                                I agree to seat {numberOfPeople} people on a table for {tableCapacity}
-                            </Text>
-                        </TouchableOpacity>
+                        <>
+                            <TouchableOpacity
+                                style={styles.addTableBtn}
+                                onPress={() => { setIsAddingMore(true); setShowTableSelector(true); }}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="add-circle-outline" size={16} color={themeConfig.accent.primary} />
+                                <Text style={styles.addTableBtnText}>Add another table</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.checkboxRow} onPress={() => setOverrideCapacity(v => !v)} activeOpacity={0.7}>
+                                <View style={[styles.checkbox, overrideCapacity && styles.checkboxChecked]}>
+                                    {overrideCapacity && <Ionicons name="checkmark" size={13} color={themeConfig.text.inverse} />}
+                                </View>
+                                <Text style={styles.checkboxLabel}>
+                                    I agree to seat {clientsCount} people on {selectedTables.length > 1 ? `${selectedTables.length} tables` : 'a table'} with total capacity {totalCapacity}
+                                </Text>
+                            </TouchableOpacity>
+                        </>
                     )}
 
                     {/* Phone */}
@@ -412,11 +464,11 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
             {/* Table selector */}
             <TableSelectorModal
                 visible={showTableSelector}
-                suggestedTableId={selectedTable?.id ?? suggestedTable?.id ?? null}
+                suggestedTableId={isAddingMore ? null : (selectedTables[0]?.id ?? suggestedTable?.id ?? null)}
                 currentStatusColor={currentStatusColor}
-                tableColorOverrides={tableColorOverrides}
-                onClose={() => setShowTableSelector(false)}
-                onChoose={t => setSelectedTable(t)}
+                tableColorOverrides={selectorColorOverrides}
+                onClose={() => { setShowTableSelector(false); setIsAddingMore(false); }}
+                onChoose={handleTableChosen}
             />
 
         </Modal>
@@ -524,6 +576,42 @@ const styles = StyleSheet.create({
     },
     placeholder: {
         color: themeConfig.text.muted,
+    },
+    chipsRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 6,
+        marginTop: -8,
+        marginBottom: 14,
+    },
+    chip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: themeConfig.accent.primary,
+        backgroundColor: themeConfig.background.secondary,
+    },
+    chipText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: themeConfig.accent.primary,
+        maxWidth: 100,
+    },
+    addTableBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 10,
+        paddingVertical: 2,
+    },
+    addTableBtnText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: themeConfig.accent.primary,
     },
     checkboxRow: {
         flexDirection: 'row',

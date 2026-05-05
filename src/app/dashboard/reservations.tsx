@@ -143,8 +143,13 @@ function SectionHeader({ label, accent, count, collapsed, onToggle }: {
 
 function ReservationRow({ item, onPress, onEdit }: { item: Reservation; onPress: () => void; onEdit?: () => void }) {
     const { floors } = useClubData();
-    const tableLabel = item.tables?.[0]
-        ? floors.flatMap(f => f.objects).find(o => o.id === item.tables![0])?.label ?? item.tables[0]
+    const allObjects = floors.flatMap(f => f.objects);
+    const firstTableLabel = item.tables?.[0]
+        ? allObjects.find(o => o.id === item.tables![0])?.label ?? item.tables[0]
+        : undefined;
+    const extraCount = (item.tables?.length ?? 0) - 1;
+    const tableLabel = firstTableLabel
+        ? extraCount > 0 ? `${firstTableLabel} +${extraCount}` : firstTableLabel
         : undefined;
 
     return (
