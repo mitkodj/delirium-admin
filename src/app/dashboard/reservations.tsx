@@ -15,7 +15,7 @@ import { Reservation, ReservationStatus } from '../../types/Disco';
 import adminStyles from './styles/adminStyles';
 import { useSidebar } from '../../providers/SidebarContext';
 import { useClubData } from '../../providers/ClubDataContext';
-import { getReservations } from '../../utils/service';
+import { getReservations, updateReservation } from '../../utils/service';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -141,7 +141,7 @@ function SectionHeader({ label, accent, count, collapsed, onToggle }: {
     );
 }
 
-function ReservationRow({ item, onPress, onEdit }: { item: Reservation; onPress: () => void; onEdit?: () => void }) {
+function ReservationRow({ item, onPress, onEdit, onSeat }: { item: Reservation; onPress: () => void; onEdit?: () => void; onSeat?: () => void }) {
     const { floors } = useClubData();
     const allObjects = floors.flatMap(f => f.objects);
     const firstTableLabel = item.tables?.[0]
@@ -197,6 +197,11 @@ function ReservationRow({ item, onPress, onEdit }: { item: Reservation; onPress:
 
             </View>
 
+            {onSeat && item.status !== ReservationStatus.SEATED && item.status !== ReservationStatus.GONE && item.status !== ReservationStatus.CANCELLED && (
+                <TouchableOpacity style={styles.rowSeatBtn} onPress={onSeat} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+                    <MaterialCommunityIcons name="seat" size={18} color="#22c55e" />
+                </TouchableOpacity>
+            )}
             {onEdit && (
                 <TouchableOpacity style={styles.rowEditBtn} onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
                     <Ionicons name="pencil" size={18} color={themeConfig.accent.primary} />
@@ -218,12 +223,14 @@ function ReservationDetailModal({
     tableColorOverrides,
     onClose,
     onEdit,
+    onSeat,
 }: {
     reservation: Reservation | null;
     visible: boolean;
     tableColorOverrides: Record<string, string>;
     onClose: () => void;
     onEdit: () => void;
+    onSeat: () => void;
 }) {
     const { floors } = useClubData();
     const insets = useSafeAreaInsets();
@@ -264,8 +271,9 @@ function ReservationDetailModal({
         }
     }, [visible]);
 
-    const tableFloor = reservation?.tables?.[0]
-        ? floors.find(f => f.objects.some(o => o.id === reservation.tables![0]))
+    const reservationTableIds = new Set(reservation?.tables ?? []);
+    const tableFloor = reservationTableIds.size > 0
+        ? floors.find(f => f.objects.some(o => reservationTableIds.has(o.id)))
         : undefined;
 
     const canvasW = Math.max(tableFloor?.width ?? DETAIL_CANVAS_W, DETAIL_CANVAS_W);
@@ -294,7 +302,7 @@ function ReservationDetailModal({
                     {/* Info row — reuse the same list row component */}
                     {reservation && (
                         <View style={detailStyles.rowWrapper}>
-                            <ReservationRow item={reservation} onPress={() => {}} onEdit={onEdit} />
+                            <ReservationRow item={reservation} onPress={() => {}} onEdit={onEdit} onSeat={onSeat} />
                         </View>
                     )}
 
@@ -327,7 +335,7 @@ function ReservationDetailModal({
                                         selectOnly
                                         counterRotateLabels={shouldRotate}
                                         tableColorOverrides={tableColorOverrides}
-                                        pulsingTableId={reservation?.tables?.[0] ?? undefined}
+                                        pulsingTableIds={reservation?.tables ?? undefined}
                                         onDeselect={() => {}}
                                         onSelect={() => {}}
                                         onUpdate={() => {}}
@@ -433,9 +441,9 @@ export default function Reservations() {
     const tableColorOverrides = useMemo<Record<string, string>>(() => {
         const overrides: Record<string, string> = {};
         for (const r of filteredReservations) {
-            if (!r.tables?.[0] || r.status === undefined) continue;
+            if (!r.tables?.length || r.status === undefined) continue;
             const color = STATUS_COLOR[r.status];
-            if (color) overrides[r.tables[0]] = color;
+            if (color) for (const id of r.tables) overrides[id] = color;
         }
         return overrides;
     }, [filteredReservations]);
@@ -519,6 +527,24 @@ export default function Reservations() {
     const closeModal = () => {
         setModalVisible(false);
         setEditingReservation(null);
+    };
+
+    const handleSeat = async (item: Reservation) => {
+        const clubId = (globalThis as any).myClubs?.[0]?.id;
+        await updateReservation(item.id, {
+            discoId: clubId,
+            firstName: item.firstName,
+            lastName: item.lastName,
+            reservationDate: item.reservationDate,
+            tables: item.tables ?? undefined,
+            phoneNumber: item.phoneNumber,
+            comment: item.comment,
+            clientsCount: item.clientsCount ?? 1,
+            status: ReservationStatus.SEATED,
+        });
+        const seated = { ...item, status: ReservationStatus.SEATED };
+        setFilteredReservations(prev => prev.map(r => r.id === item.id ? seated : r));
+        setDetailReservation(prev => prev?.id === item.id ? seated : prev);
     };
 
     const handleSave = (saved: Reservation) => {
@@ -608,6 +634,7 @@ export default function Reservations() {
                 tableColorOverrides={tableColorOverrides}
                 onClose={closeDetail}
                 onEdit={() => detailReservation && openEdit(detailReservation)}
+                onSeat={() => detailReservation && handleSeat(detailReservation)}
             />
 
             <ReservationFormModal
@@ -686,6 +713,13 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         gap: 5,
+    },
+    rowSeatBtn: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: 'rgba(34, 197, 94, 0.12)',
+        alignSelf: 'center',
+        marginRight: 4,
     },
     rowEditBtn: {
         padding: 8,

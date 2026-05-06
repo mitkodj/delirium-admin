@@ -27,7 +27,7 @@ export default {
     extra: {
       ...appConfig,
       eas: {
-        projectId: "63ab7997-c47e-420a-a9c2-3b7ea4c36cf9",
+        projectId: "cbeca8df-42bd-476e-aaa2-6e6c639a06ad",
       },
     },
     plugins: ["expo-font"],

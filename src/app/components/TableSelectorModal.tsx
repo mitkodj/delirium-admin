@@ -143,7 +143,7 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
                                     selectOnly
                                     counterRotateLabels={shouldRotate}
                                     tableColorOverrides={mergedColorOverrides}
-                                    pulsingTableId={selectedId ?? undefined}
+                                    pulsingTableIds={selectedId ? [selectedId] : undefined}
                                     dimmedTableId={selectedId !== suggestedTableId ? suggestedTableId ?? undefined : undefined}
                                     onDeselect={() => {}}
                                     onSelect={handleSelect}

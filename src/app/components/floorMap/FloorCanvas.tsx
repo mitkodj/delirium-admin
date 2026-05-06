@@ -17,7 +17,7 @@ interface Props {
   selectOnly?: boolean;
   counterRotateLabels?: boolean;
   tableColorOverrides?: Record<string, string>;
-  pulsingTableId?: string;
+  pulsingTableIds?: string[];
   dimmedTableId?: string;
   onDeselect: () => void;
   onSelect: (id: string) => void;
@@ -38,7 +38,7 @@ function getMidpoint(t: Touch2[]) {
 }
 
 export default function FloorCanvas({
-  objects, selectedId, width, height, isReadonly, selectOnly, counterRotateLabels, tableColorOverrides, pulsingTableId, dimmedTableId, onDeselect, onSelect, onUpdate, onDuplicate,
+  objects, selectedId, width, height, isReadonly, selectOnly, counterRotateLabels, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate, onDuplicate,
 }: Props) {
   const vLines = Math.floor(width  / GRID_SIZE);
   const hLines = Math.floor(height / GRID_SIZE);
@@ -187,7 +187,7 @@ export default function FloorCanvas({
             selectOnly={selectOnly}
             counterRotateLabels={counterRotateLabels}
             colorOverride={tableColorOverrides?.[obj.id]}
-            isPulsing={pulsingTableId === obj.id}
+            isPulsing={pulsingTableIds?.includes(obj.id) ?? false}
             staticOpacity={dimmedTableId === obj.id ? 0.35 : undefined}
             onSelect={onSelect}
             onUpdate={onUpdate}
