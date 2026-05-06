@@ -252,7 +252,7 @@ function ReservationDetailModal({
         onPanResponderRelease: (_, gs) => {
             if (gs.dy > 100 || gs.vy > 0.8) {
                 Animated.timing(translateY, { toValue: 900, duration: 220, useNativeDriver: true })
-                    .start(() => { onCloseRef.current(); translateY.setValue(0); });
+                    .start(() => { onCloseRef.current(); });
             } else {
                 Animated.spring(translateY, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 300 } as any).start();
             }
@@ -490,7 +490,7 @@ export default function Reservations() {
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchReservations = async () => {
-        const reservations = await getReservations() as any;
+        const reservations = await getReservations(selectedDate) as any;
         setFilteredReservations(reservations.data as any);
     };
 

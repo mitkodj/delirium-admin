@@ -14,6 +14,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import themeConfig from '../../themes/themeConfig';
 import { createReservation, updateReservation, CreateReservationPayload } from '../../utils/service';
+import { TIME_PRESETS } from '../../utils/constants';
 import { FloorObject } from '../../types/FloorMap';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation, ReservationStatus } from '../../types/Disco';
@@ -270,7 +271,7 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
 
                     {/* Time presets */}
                     <View style={styles.row}>
-                        {[{ label: 'Daytime', hour: 11 }, { label: 'Nighttime', hour: 23 }].map(({ label, hour }, i) => {
+                        {TIME_PRESETS.map(({ label, hour }, i) => {
                             const active = date.getHours() === hour && date.getMinutes() === 0;
                             return (
                                 <React.Fragment key={label}>

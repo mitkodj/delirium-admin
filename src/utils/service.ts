@@ -263,11 +263,17 @@ export const updateReservation = async (id: string, reservation: CreateReservati
   }
 };
 
-export const getReservations = async () => {
+export const getReservations = async (date: Date) => {
   try {
-    return await axios.get(`${partyService}/api/reservations`);
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+    return await axios.get(`${partyService}/api/reservations`, {
+      params: { startDate: start.toISOString(), endDate: end.toISOString() },
+    });
   } catch (e) {
-    console.log('createReservation error', e);
+    console.log('getReservations error', e);
     return [];
   }
 };
