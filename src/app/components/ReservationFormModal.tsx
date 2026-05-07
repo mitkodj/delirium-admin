@@ -187,7 +187,6 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
 
             let saved: Reservation;
             if (isEdit) {
-                console.log(payload);
                 await updateReservation(reservation!.id, payload);
                 saved = {
                     ...reservation!,

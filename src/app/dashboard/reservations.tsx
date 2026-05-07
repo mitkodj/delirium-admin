@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
-    View, Text, TouchableOpacity, StyleSheet,
+    View, Text, TextInput, TouchableOpacity, StyleSheet,
     SectionList, RefreshControl, Modal, Pressable, Animated, PanResponder,
 } from 'react-native';
 import { Stack } from 'expo-router';
@@ -420,7 +420,18 @@ export default function Reservations() {
     const [detailVisible, setDetailVisible] = useState(false);
     const [schemaVisible, setSchemaVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
-    const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
+    const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const filteredReservations = useMemo(() => {
+        const q = searchQuery.trim().toLowerCase();
+        if (!q) return reservations;
+        return reservations.filter(r =>
+            r.firstName.toLowerCase().includes(q) ||
+            r.lastName.toLowerCase().includes(q) ||
+            r.comment?.toLowerCase().includes(q)
+        );
+    }, [reservations, searchQuery]);
     const [collapsedSections, setCollapsedSections] = useState<Set<ReservationStatus>>(
         () => new Set([ReservationStatus.GONE, ReservationStatus.CANCELLED])
     );
@@ -491,7 +502,7 @@ export default function Reservations() {
 
     const fetchReservations = async () => {
         const reservations = await getReservations(selectedDate) as any;
-        setFilteredReservations(reservations.data as any);
+        setReservations(reservations.data as any);
     };
 
     const handleRefresh = async () => {
@@ -543,12 +554,12 @@ export default function Reservations() {
             status: ReservationStatus.SEATED,
         });
         const seated = { ...item, status: ReservationStatus.SEATED };
-        setFilteredReservations(prev => prev.map(r => r.id === item.id ? seated : r));
+        setReservations(prev => prev.map(r => r.id === item.id ? seated : r));
         setDetailReservation(prev => prev?.id === item.id ? seated : prev);
     };
 
     const handleSave = (saved: Reservation) => {
-        setFilteredReservations(prev =>
+        setReservations(prev =>
             editingReservation
                 ? prev.map(r => r.id === saved.id ? saved : r)
                 : [...prev, saved]
@@ -601,14 +612,28 @@ export default function Reservations() {
                     </View>
                 }
                 ListHeaderComponent={
-                    <View style={styles.statsRow}>
-                        {stats.map(s => (
-                            <View key={s.label} style={styles.statCard}>
-                                <Text style={styles.statValue}>{s.value}</Text>
-                                <Text style={styles.statLabel}>{s.label}</Text>
-                            </View>
-                        ))}
-                    </View>
+                    <>
+                        <View style={styles.statsRow}>
+                            {stats.map(s => (
+                                <View key={s.label} style={styles.statCard}>
+                                    <Text style={styles.statValue}>{s.value}</Text>
+                                    <Text style={styles.statLabel}>{s.label}</Text>
+                                </View>
+                            ))}
+                        </View>
+                        <View style={styles.searchRow}>
+                            <Ionicons name="search-outline" size={16} color={themeConfig.text.muted} style={styles.searchIcon} />
+                            <TextInput
+                                style={styles.searchInput}
+                                placeholder="Search by name or comment..."
+                                placeholderTextColor={themeConfig.text.muted}
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                returnKeyType="search"
+                                clearButtonMode="while-editing"
+                            />
+                        </View>
+                    </>
                 }
                 stickySectionHeadersEnabled={false}
                 style={styles.list}
@@ -853,6 +878,26 @@ const styles = StyleSheet.create({
         gap: 8,
         paddingHorizontal: 4,
         paddingBottom: 12,
+    },
+    searchRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: themeConfig.background.secondary,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        marginHorizontal: 4,
+        marginBottom: 4,
+        paddingHorizontal: 10,
+    },
+    searchIcon: {
+        marginRight: 6,
+    },
+    searchInput: {
+        flex: 1,
+        paddingVertical: 10,
+        fontSize: 14,
+        color: themeConfig.text.primary,
     },
     statCard: {
         flex: 1,
