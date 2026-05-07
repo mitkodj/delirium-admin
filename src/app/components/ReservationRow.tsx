@@ -18,12 +18,15 @@ export function formatTime(iso: string) {
     return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-export function ReservationRow({ item, onPress, onEdit, onSeat, onStatusChange }: {
+export function ReservationRow({ item, onPress, onEdit, onSeat, onCall, onStatusChange, expandComment, truncateTableLabel }: {
     item: Reservation;
     onPress: () => void;
     onEdit?: () => void;
     onSeat?: () => void;
+    onCall?: () => void;
     onStatusChange?: () => void;
+    expandComment?: boolean;
+    truncateTableLabel?: boolean;
 }) {
     const { floors } = useClubData();
     const allObjects = floors.flatMap(f => f.objects);
@@ -31,9 +34,12 @@ export function ReservationRow({ item, onPress, onEdit, onSeat, onStatusChange }
         ? allObjects.find(o => o.id === item.tables![0])?.label ?? item.tables[0]
         : undefined;
     const extraCount = (item.tables?.length ?? 0) - 1;
-    const tableLabel = firstTableLabel
+    const rawTableLabel = firstTableLabel
         ? extraCount > 0 ? `${firstTableLabel} +${extraCount}` : firstTableLabel
         : undefined;
+    const tableLabel = truncateTableLabel && rawTableLabel && rawTableLabel.length > 10
+        ? rawTableLabel.slice(0, 10) + '…'
+        : rawTableLabel;
 
     return (
         <TouchableOpacity
@@ -67,7 +73,7 @@ export function ReservationRow({ item, onPress, onEdit, onSeat, onStatusChange }
                 {item.comment ? (
                     <View style={rowStyles.metaRow}>
                         <Ionicons name="chatbubble-outline" size={13} color={themeConfig.text.muted} />
-                        <Text style={rowStyles.commentText} numberOfLines={1}>{item.comment}</Text>
+                        <Text style={rowStyles.commentText} numberOfLines={expandComment ? undefined : 1}>{item.comment}</Text>
                     </View>
                 ) : (
                     <View style={rowStyles.metaRow}>
@@ -80,6 +86,11 @@ export function ReservationRow({ item, onPress, onEdit, onSeat, onStatusChange }
             {onSeat && item.status !== ReservationStatus.SEATED && item.status !== ReservationStatus.GONE && item.status !== ReservationStatus.CANCELLED && (
                 <TouchableOpacity style={rowStyles.rowSeatBtn} onPress={onSeat} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
                     <MaterialCommunityIcons name="seat" size={18} color="#22c55e" />
+                </TouchableOpacity>
+            )}
+            {onCall && (
+                <TouchableOpacity style={rowStyles.rowCallBtn} onPress={onCall} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+                    <Ionicons name="call" size={18} color="#22c55e" />
                 </TouchableOpacity>
             )}
             {onStatusChange && (
@@ -110,6 +121,13 @@ export const rowStyles = StyleSheet.create({
         gap: 5,
     },
     rowSeatBtn: {
+        padding: 8,
+        borderRadius: 8,
+        backgroundColor: 'rgba(34, 197, 94, 0.12)',
+        alignSelf: 'center',
+        marginRight: 4,
+    },
+    rowCallBtn: {
         padding: 8,
         borderRadius: 8,
         backgroundColor: 'rgba(34, 197, 94, 0.12)',

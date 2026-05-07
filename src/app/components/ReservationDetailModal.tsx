@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet,
-    Modal, Pressable, Animated, PanResponder,
+    Modal, Pressable, Animated, PanResponder, Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -173,7 +173,10 @@ export default function ReservationDetailModal({
                                 item={reservation}
                                 onPress={() => {}}
                                 onEdit={onEdit}
+                                onCall={reservation.phoneNumber ? () => Linking.openURL(`tel:${reservation.phoneNumber}`) : undefined}
                                 onStatusChange={handleToggleStatusPanel}
+                                expandComment
+                                truncateTableLabel
                             />
                         </View>
                     )}
