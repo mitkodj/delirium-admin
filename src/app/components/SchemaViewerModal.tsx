@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import FloorCanvas from './floorMap/FloorCanvas';
 import themeConfig from '../../themes/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
+import { Reservation } from '../../types/Disco';
+import { ReservationRow } from './ReservationRow';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -13,16 +15,25 @@ const CANVAS_H = 600;
 type Props = {
     visible: boolean;
     tableColorOverrides?: Record<string, string>;
+    reservations?: Reservation[];
     onClose: () => void;
+    onPressReservation: (reservation: Reservation) => void;
 };
 
-export default function SchemaViewerModal({ visible, tableColorOverrides, onClose }: Props) {
+export default function SchemaViewerModal({
+    visible,
+    tableColorOverrides,
+    reservations,
+    onClose,
+    onPressReservation,
+}: Props) {
     const clubId = (globalThis as any).myClubs?.[0]?.id;
     const { floors, layoutLoading, loadLayout } = useClubData();
 
     const [activeFloorId, setActiveFloorId] = useState<string>();
     const [containerW, setContainerW] = useState(0);
     const [containerH, setContainerH] = useState(0);
+    const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!visible || !clubId) return;
@@ -45,6 +56,10 @@ export default function SchemaViewerModal({ visible, tableColorOverrides, onClos
         ? Math.min(containerW / displayW, containerH / displayH)
         : 1;
 
+    const matched = selectedTableId
+        ? reservations?.find(r => r.tables?.includes(selectedTableId))
+        : undefined;
+
     return (
         <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
             <View style={styles.container}>
@@ -56,6 +71,23 @@ export default function SchemaViewerModal({ visible, tableColorOverrides, onClos
                         <Ionicons name="close" size={24} color={themeConfig.text.muted} />
                     </TouchableOpacity>
                 </View>
+
+                {/* Reservation preview */}
+                {matched && (
+                    <View style={styles.reservationPreview}>
+                        <ReservationRow
+                            item={matched}
+                            onPress={() => {
+                                onClose();
+                                onPressReservation(matched);
+                            }}
+                            onEdit={() => {
+                                onClose();
+                                onPressReservation(matched);
+                            }}
+                        />
+                    </View>
+                )}
 
                 {/* Floor tabs — hidden when only one floor */}
                 {floors.length > 1 && (
@@ -105,14 +137,15 @@ export default function SchemaViewerModal({ visible, tableColorOverrides, onClos
                             }}>
                                 <FloorCanvas
                                     objects={activeFloor.objects}
-                                    selectedId={null}
+                                    selectedId={selectedTableId}
                                     width={canvasW}
                                     height={canvasH}
                                     isReadonly={true}
+                                    selectOnly
                                     counterRotateLabels={shouldRotate}
                                     tableColorOverrides={tableColorOverrides}
-                                    onDeselect={() => {}}
-                                    onSelect={() => {}}
+                                    onDeselect={() => setSelectedTableId(null)}
+                                    onSelect={id => setSelectedTableId(id)}
                                     onUpdate={() => {}}
                                     onDuplicate={() => {}}
                                 />
@@ -149,6 +182,10 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '700',
         color: themeConfig.text.primary,
+    },
+    reservationPreview: {
+        paddingHorizontal: 12,
+        paddingBottom: 8,
     },
     tabsScroll: {
         flexGrow: 0,

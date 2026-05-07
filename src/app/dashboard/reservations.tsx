@@ -1,28 +1,24 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    SectionList, RefreshControl, Modal, Pressable, Animated, PanResponder,
+    SectionList, RefreshControl,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import themeConfig from '../../themes/themeConfig';
 import ReservationFormModal from '../components/ReservationFormModal';
+import ReservationDetailModal from '../components/ReservationDetailModal';
 import AddButton from '../components/AddButton';
 import SchemaViewerModal from '../components/SchemaViewerModal';
-import FloorCanvas from '../components/floorMap/FloorCanvas';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import adminStyles from './styles/adminStyles';
 import { useSidebar } from '../../providers/SidebarContext';
 import { useClubData } from '../../providers/ClubDataContext';
 import { getReservations, updateReservation } from '../../utils/service';
+import { ReservationRow } from '../components/ReservationRow';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function formatTime(iso: string) {
-    const d = new Date(iso);
-    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-}
 
 function ReservationsHeader({ navLabel, isSelectedToday, onPrev, onNext, onNew }: {
     navLabel: string;
@@ -105,14 +101,6 @@ const headerStyles = StyleSheet.create({
 
 // ── Row component ─────────────────────────────────────────────────────────────
 
-const STATUS_STYLE: Partial<Record<ReservationStatus, object>> = {
-    [ReservationStatus.OPEN]:      { backgroundColor: 'rgba(234, 179, 8, 0.08)',   borderWidth: 1, borderColor: 'rgba(234, 179, 8, 0.4)' },
-    [ReservationStatus.APPROVED]:  { backgroundColor: 'rgba(99, 102, 241, 0.08)',  borderWidth: 1, borderColor: 'rgba(99, 102, 241, 0.4)' },
-    [ReservationStatus.SEATED]:    { backgroundColor: 'rgba(34, 197, 94, 0.08)',   borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.4)' },
-    [ReservationStatus.GONE]:      { backgroundColor: 'rgba(148, 163, 184, 0.08)', borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.3)', opacity: 0.6 },
-    [ReservationStatus.CANCELLED]: { backgroundColor: 'rgba(239, 68, 68, 0.08)',   borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.35)', opacity: 0.6 },
-};
-
 const SECTION_CONFIG: { status: ReservationStatus; label: string; accent: string; defaultCollapsed: boolean }[] = [
     { status: ReservationStatus.OPEN,      label: 'Open',      accent: '#eab308', defaultCollapsed: false },
     { status: ReservationStatus.APPROVED,  label: 'Approved',  accent: '#6366f1', defaultCollapsed: false },
@@ -140,267 +128,6 @@ function SectionHeader({ label, accent, count, collapsed, onToggle }: {
         </TouchableOpacity>
     );
 }
-
-function ReservationRow({ item, onPress, onEdit, onSeat }: { item: Reservation; onPress: () => void; onEdit?: () => void; onSeat?: () => void }) {
-    const { floors } = useClubData();
-    const allObjects = floors.flatMap(f => f.objects);
-    const firstTableLabel = item.tables?.[0]
-        ? allObjects.find(o => o.id === item.tables![0])?.label ?? item.tables[0]
-        : undefined;
-    const extraCount = (item.tables?.length ?? 0) - 1;
-    const tableLabel = firstTableLabel
-        ? extraCount > 0 ? `${firstTableLabel} +${extraCount}` : firstTableLabel
-        : undefined;
-
-    return (
-        <TouchableOpacity
-            style={[
-                styles.row,
-                item.status !== undefined && STATUS_STYLE[item.status],
-            ]}
-            onPress={onPress}
-            activeOpacity={0.7}
-        >
-            {/* Details */}
-            <View style={styles.infoCol}>
-
-                <Text style={styles.nameText} numberOfLines={1}>
-                    {item.firstName} {item.lastName}
-                </Text>
-
-                <View style={styles.metaRow}>
-                    <Ionicons name="person-outline" size={13} color={themeConfig.text.muted} />
-                    <Text style={styles.metaText}>{item.clientsCount}</Text>
-                    {item.reservationDate && (
-                        <>
-                            <View style={styles.metaSpacer} />
-                            <MaterialIcons name="table-bar" size={13} color={themeConfig.text.muted} />
-                            <Text style={styles.metaText}>{tableLabel}</Text>
-                        </>
-                    )}
-                    <View style={styles.metaSpacer} />
-                    <Ionicons name="time" size={13} color={themeConfig.text.muted} />
-                    <Text style={styles.metaText}>{formatTime(item.reservationDate)}</Text>
-                </View>
-
-                {item.comment ? (
-                    <View style={styles.metaRow}>
-                        <Ionicons name="chatbubble-outline" size={13} color={themeConfig.text.muted} />
-                        <Text style={styles.commentText} numberOfLines={1}>{item.comment}</Text>
-                    </View>
-                ) : (
-                    <View style={styles.metaRow}>
-                        <Ionicons name="chatbubble-outline" size={13} color={themeConfig.background.secondary} />
-                        <Text style={[styles.commentText, { color: themeConfig.text.muted, opacity: 0.4 }]}>—</Text>
-                    </View>
-                )}
-
-            </View>
-
-            {onSeat && item.status !== ReservationStatus.SEATED && item.status !== ReservationStatus.GONE && item.status !== ReservationStatus.CANCELLED && (
-                <TouchableOpacity style={styles.rowSeatBtn} onPress={onSeat} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-                    <MaterialCommunityIcons name="seat" size={18} color="#22c55e" />
-                </TouchableOpacity>
-            )}
-            {onEdit && (
-                <TouchableOpacity style={styles.rowEditBtn} onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-                    <Ionicons name="pencil" size={18} color={themeConfig.accent.primary} />
-                </TouchableOpacity>
-            )}
-
-        </TouchableOpacity>
-    );
-}
-
-// ── Detail modal ─────────────────────────────────────────────────────────────
-
-const DETAIL_CANVAS_W = 900;
-const DETAIL_CANVAS_H = 600;
-
-function ReservationDetailModal({
-    reservation,
-    visible,
-    tableColorOverrides,
-    onClose,
-    onEdit,
-    onSeat,
-}: {
-    reservation: Reservation | null;
-    visible: boolean;
-    tableColorOverrides: Record<string, string>;
-    onClose: () => void;
-    onEdit: () => void;
-    onSeat: () => void;
-}) {
-    const { floors } = useClubData();
-    const insets = useSafeAreaInsets();
-    const scaleAnim = useRef(new Animated.Value(0.88)).current;
-    const opacityAnim = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(0)).current;
-    const [containerW, setContainerW] = useState(0);
-    const [containerH, setContainerH] = useState(0);
-
-    const onCloseRef = useRef(onClose);
-    onCloseRef.current = onClose;
-
-    const panResponder = useRef(PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_, gs) => gs.dy > 6 && gs.dy > Math.abs(gs.dx),
-        onPanResponderMove: (_, gs) => {
-            if (gs.dy > 0) translateY.setValue(gs.dy);
-        },
-        onPanResponderRelease: (_, gs) => {
-            if (gs.dy > 100 || gs.vy > 0.8) {
-                Animated.timing(translateY, { toValue: 900, duration: 220, useNativeDriver: true })
-                    .start(() => { onCloseRef.current(); });
-            } else {
-                Animated.spring(translateY, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 300 } as any).start();
-            }
-        },
-    })).current;
-
-    useEffect(() => {
-        if (visible) {
-            translateY.setValue(0);
-            scaleAnim.setValue(0.88);
-            opacityAnim.setValue(0);
-            Animated.parallel([
-                Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, damping: 18, stiffness: 200, mass: 0.8 } as any),
-                Animated.timing(opacityAnim, { toValue: 1, duration: 160, useNativeDriver: true }),
-            ]).start();
-        }
-    }, [visible]);
-
-    const reservationTableIds = new Set(reservation?.tables ?? []);
-    const tableFloor = reservationTableIds.size > 0
-        ? floors.find(f => f.objects.some(o => reservationTableIds.has(o.id)))
-        : undefined;
-
-    const canvasW = Math.max(tableFloor?.width ?? DETAIL_CANVAS_W, DETAIL_CANVAS_W);
-    const canvasH = Math.max(tableFloor?.height ?? DETAIL_CANVAS_H, DETAIL_CANVAS_H);
-    const screenIsPortrait = containerH > containerW;
-    const shouldRotate = canvasW > canvasH && screenIsPortrait;
-    const displayW = shouldRotate ? canvasH : canvasW;
-    const displayH = shouldRotate ? canvasW : canvasH;
-    const scale = containerW > 0 && containerH > 0
-        ? Math.min(containerW / displayW, containerH / displayH)
-        : 1;
-
-    return (
-        <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
-            <View style={[detailStyles.backdrop, { paddingTop: Math.max(20, insets.top), paddingBottom: Math.max(20, insets.bottom) }]}>
-                <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
-                <Animated.View
-                    {...panResponder.panHandlers}
-                    style={[detailStyles.card, { opacity: opacityAnim, transform: [{ scale: scaleAnim }, { translateY }] }]}
-                >
-                    {/* Drag pill */}
-                    <View style={detailStyles.pillRow}>
-                        <View style={detailStyles.pill} />
-                    </View>
-
-                    {/* Info row — reuse the same list row component */}
-                    {reservation && (
-                        <View style={detailStyles.rowWrapper}>
-                            <ReservationRow item={reservation} onPress={() => {}} onEdit={onEdit} onSeat={onSeat} />
-                        </View>
-                    )}
-
-                    {/* Floor canvas */}
-                    <View
-                        style={detailStyles.canvasWrapper}
-                        onLayout={e => {
-                            setContainerW(e.nativeEvent.layout.width);
-                            setContainerH(e.nativeEvent.layout.height);
-                        }}
-                    >
-                        {tableFloor && containerW > 0 && containerH > 0 && (
-                            <View style={{ width: containerW, height: containerH, overflow: 'hidden', backgroundColor: '#14122a', borderRadius: 12 }}>
-                                <View style={{
-                                    position: 'absolute',
-                                    width: canvasW,
-                                    height: canvasH,
-                                    left: (containerW - canvasW) / 2,
-                                    top: (containerH - canvasH) / 2,
-                                    transform: shouldRotate
-                                        ? [{ rotate: '90deg' }, { scale }]
-                                        : [{ scale }],
-                                }}>
-                                    <FloorCanvas
-                                        objects={tableFloor.objects}
-                                        selectedId={reservation?.tables?.[0] ?? null}
-                                        width={canvasW}
-                                        height={canvasH}
-                                        isReadonly
-                                        selectOnly
-                                        counterRotateLabels={shouldRotate}
-                                        tableColorOverrides={tableColorOverrides}
-                                        pulsingTableIds={reservation?.tables ?? undefined}
-                                        onDeselect={() => {}}
-                                        onSelect={() => {}}
-                                        onUpdate={() => {}}
-                                        onDuplicate={() => {}}
-                                    />
-                                </View>
-                            </View>
-                        )}
-                        {!tableFloor && (
-                            <View style={detailStyles.noFloor}>
-                                <Ionicons name="map-outline" size={32} color={themeConfig.text.muted} />
-                                <Text style={detailStyles.noFloorText}>No table assigned</Text>
-                            </View>
-                        )}
-                    </View>
-
-                </Animated.View>
-            </View>
-        </Modal>
-    );
-}
-
-const detailStyles = StyleSheet.create({
-    backdrop: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.65)',
-        justifyContent: 'center',
-        padding: 20,
-    },
-    card: {
-        flex: 1,
-        backgroundColor: themeConfig.background.secondary,
-        borderRadius: 16,
-        overflow: 'hidden',
-    },
-    rowWrapper: {
-        paddingHorizontal: 8,
-        paddingTop: 8,
-    },
-    pillRow: {
-        alignItems: 'center',
-        paddingTop: 10,
-        paddingBottom: 4,
-    },
-    pill: {
-        width: 36,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: themeConfig.border.subtle,
-    },
-    canvasWrapper: {
-        flex: 1,
-        margin: 8,
-    },
-    noFloor: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: 10,
-    },
-    noFloorText: {
-        fontSize: 14,
-        color: themeConfig.text.muted,
-    },
-});
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -540,7 +267,7 @@ export default function Reservations() {
         setEditingReservation(null);
     };
 
-    const handleSeat = async (item: Reservation) => {
+    const updateStatus = async (item: Reservation, status: ReservationStatus) => {
         const clubId = (globalThis as any).myClubs?.[0]?.id;
         await updateReservation(item.id, {
             discoId: clubId,
@@ -551,11 +278,33 @@ export default function Reservations() {
             phoneNumber: item.phoneNumber,
             comment: item.comment,
             clientsCount: item.clientsCount ?? 1,
-            status: ReservationStatus.SEATED,
+            status,
         });
-        const seated = { ...item, status: ReservationStatus.SEATED };
-        setReservations(prev => prev.map(r => r.id === item.id ? seated : r));
-        setDetailReservation(prev => prev?.id === item.id ? seated : prev);
+        const updated = { ...item, status };
+        setReservations(prev => prev.map(r => r.id === item.id ? updated : r));
+        setDetailReservation(prev => prev?.id === item.id ? updated : prev);
+    };
+
+    const handleApprove = (item: Reservation) => updateStatus(item, ReservationStatus.APPROVED);
+    const handleSeat    = (item: Reservation) => updateStatus(item, ReservationStatus.SEATED);
+    const handleGone    = (item: Reservation) => updateStatus(item, ReservationStatus.GONE);
+
+    const handleCancel = async (item: Reservation) => {
+        const clubId = (globalThis as any).myClubs?.[0]?.id;
+        await updateReservation(item.id, {
+            discoId: clubId,
+            firstName: item.firstName,
+            lastName: item.lastName,
+            reservationDate: item.reservationDate,
+            tables: item.tables ?? undefined,
+            phoneNumber: item.phoneNumber,
+            comment: item.comment,
+            clientsCount: item.clientsCount ?? 1,
+            status: ReservationStatus.CANCELLED,
+        });
+        const cancelled = { ...item, status: ReservationStatus.CANCELLED };
+        setReservations(prev => prev.map(r => r.id === item.id ? cancelled : r));
+        setDetailReservation(prev => prev?.id === item.id ? cancelled : prev);
     };
 
     const handleSave = (saved: Reservation) => {
@@ -659,7 +408,11 @@ export default function Reservations() {
                 tableColorOverrides={tableColorOverrides}
                 onClose={closeDetail}
                 onEdit={() => detailReservation && openEdit(detailReservation)}
+                onApprove={() => detailReservation && handleApprove(detailReservation)}
                 onSeat={() => detailReservation && handleSeat(detailReservation)}
+                onGone={() => detailReservation && handleGone(detailReservation)}
+                onCancel={() => detailReservation && handleCancel(detailReservation)}
+                onUpdateStatus={(status) => detailReservation && updateStatus(detailReservation, status)}
             />
 
             <ReservationFormModal
@@ -673,7 +426,12 @@ export default function Reservations() {
             <SchemaViewerModal
                 visible={schemaVisible}
                 tableColorOverrides={tableColorOverrides}
+                reservations={reservations}
                 onClose={() => setSchemaVisible(false)}
+                onPressReservation={(r) => {
+                    setSchemaVisible(false);
+                    openDetail(r);
+                }}
             />
 
         </View>
@@ -697,83 +455,6 @@ const styles = StyleSheet.create({
         height: 4,
         backgroundColor: themeConfig.border.subtle,
         marginHorizontal: 4,
-    },
-    row: {
-        flexDirection: 'row',
-        paddingVertical: 8,
-        paddingHorizontal: 8,
-        alignItems: 'stretch',
-        borderRadius: 12,
-    },
-    rowSeated: {
-        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-        borderWidth: 1,
-        borderColor: '#22c55e',
-    },
-    rowCancelled: {
-        opacity: 0.45,
-        backgroundColor: 'rgba(120, 120, 120, 0.12)',
-    },
-    dateCol: {
-        width: 100,
-        justifyContent: 'center',
-        paddingRight: 12,
-    },
-    dateText: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: themeConfig.text.primary,
-        marginBottom: 4,
-    },
-    timeText: {
-        fontSize: 12,
-        color: themeConfig.text.muted,
-    },
-    divider: {
-        width: 1,
-        backgroundColor: themeConfig.border.subtle,
-        marginRight: 12,
-    },
-    infoCol: {
-        flex: 1,
-        justifyContent: 'center',
-        gap: 5,
-    },
-    rowSeatBtn: {
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: 'rgba(34, 197, 94, 0.12)',
-        alignSelf: 'center',
-        marginRight: 4,
-    },
-    rowEditBtn: {
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: themeConfig.background.primary,
-        alignSelf: 'center',
-    },
-    nameText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: themeConfig.text.primary,
-    },
-    metaRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 4,
-    },
-    metaSpacer: {
-        width: 10,
-    },
-    metaText: {
-        fontSize: 12,
-        color: themeConfig.text.primary,
-    },
-    commentText: {
-        fontSize: 12,
-        color: themeConfig.text.primary,
-        fontWeight: 600,
-        flex: 1,
     },
     dateNav: {
         flexDirection: 'row',
