@@ -13,8 +13,8 @@ import adminStyles from './styles/adminStyles';
 
 type Mode = 'preview' | 'edit';
 
-const MIN_CANVAS_WIDTH  = 900;
-const MIN_CANVAS_HEIGHT = 600;
+const MIN_CANVAS_WIDTH  = 200;
+const MIN_CANVAS_HEIGHT = 300;
 
 const DEFAULT_SIZES: Record<FloorObjectType, { w: number; h: number }> = {
   table_circle:   { w: 64,  h: 64  },
@@ -41,6 +41,7 @@ export default function HostPanel() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [renamingFloorId, setRenamingFloorId] = useState<string | null>(null);
   const [floorDraftName, setFloorDraftName] = useState('');
+  const [floorsSnapshot, setFloorsSnapshot] = useState<Floor[]>([]);
   const clubId = (globalThis as any).myClubs?.[0]?.id;
 
   const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
@@ -59,9 +60,10 @@ export default function HostPanel() {
 
   // ── Mode transitions ──────────────────────────────────────────────
 
-  const enterEdit = () => { setEditDate(null); setMode('edit'); };
-  const enterEditForDate = () => { setEditDate(new Date()); setMode('edit'); };
+  const enterEdit = () => { setFloorsSnapshot(floors); setEditDate(null); setMode('edit'); };
+  const enterEditForDate = () => { setFloorsSnapshot(floors); setEditDate(new Date()); setMode('edit'); };
   const exitEdit = () => { setSelectedId(null); setEditDate(null); setMode('preview'); };
+  const cancelEdit = () => { setFloors(floorsSnapshot); exitEdit(); };
 
   // ── Object operations ─────────────────────────────────────────────
 
@@ -71,6 +73,15 @@ export default function HostPanel() {
     const newW = rightEdge  > curW ? rightEdge  + 50 : curW;
     const newH = bottomEdge > curH ? bottomEdge + 50 : curH;
     return (newW !== curW || newH !== curH) ? { ...f, width: newW, height: newH } : f;
+  };
+
+  const fitFloor = (f: Floor): Floor => {
+    if (f.objects.length === 0) return f;
+    const maxRight  = Math.max(...f.objects.map(o => o.x + o.width));
+    const maxBottom = Math.max(...f.objects.map(o => o.y + o.height));
+    const newW = Math.max(MIN_CANVAS_WIDTH,  maxRight  + 30);
+    const newH = Math.max(MIN_CANVAS_HEIGHT, maxBottom + 30);
+    return { ...f, width: newW, height: newH };
   };
 
   const addObject = (type: FloorObjectType) => {
@@ -100,8 +111,7 @@ export default function HostPanel() {
     setFloors(prev => prev.map(f => {
       if (f.id !== activeFloorId) return f;
       const updatedObjects = f.objects.map(o => o.id === id ? { ...o, ...patch } : o);
-      const obj = updatedObjects.find(o => o.id === id)!;
-      return growFloor({ ...f, objects: updatedObjects }, obj.x + obj.width, obj.y + obj.height);
+      return fitFloor({ ...f, objects: updatedObjects });
     }));
   };
 
@@ -278,7 +288,7 @@ export default function HostPanel() {
       {/* ══════════════════════════════════════════════════════════════
           Edit full-screen modal
       ══════════════════════════════════════════════════════════════ */}
-      <Modal visible={isEdit} animationType="slide" onRequestClose={exitEdit}>
+      <Modal visible={isEdit} animationType="slide" onRequestClose={cancelEdit}>
         <View style={styles.editModal}>
 
           {/* Title row with optional date pill */}
@@ -370,7 +380,7 @@ export default function HostPanel() {
 
           {/* Bottom actions */}
           <View style={styles.bottomActions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={exitEdit} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit} activeOpacity={0.8}>
               <Text style={styles.cancelLabel}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.saveButton} onPress={saveLayout} activeOpacity={0.8}>

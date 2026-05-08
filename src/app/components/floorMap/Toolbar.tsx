@@ -12,7 +12,7 @@ interface ToolItem {
 
 const TOOLS: ToolItem[] = [
   { type: 'table_circle',   label: 'Table',      shape: 'circle', color: '#7a72cc' },
-  { type: 'table_vip_rect', label: 'Sq. Table',  shape: 'rect',   color: '#F1C38E' },
+  { type: 'table_vip_rect', label: 'Sq. Table',  shape: 'rect',   color: '#7a72cc' },
   { type: 'stage_circle',   label: 'Structure',  shape: 'circle', color: '#9b7acc' },
   { type: 'stage_rect',     label: 'Str. Rect',  shape: 'rect',   color: '#9b7acc' },
 ];
