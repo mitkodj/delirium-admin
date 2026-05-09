@@ -15,7 +15,6 @@ interface Props {
   height: number;
   isReadonly: boolean;
   selectOnly?: boolean;
-  counterRotateLabels?: boolean;
   tableColorOverrides?: Record<string, string>;
   pulsingTableIds?: string[];
   dimmedTableId?: string;
@@ -38,7 +37,7 @@ function getMidpoint(t: Touch2[]) {
 }
 
 export default function FloorCanvas({
-  objects, selectedId, width, height, isReadonly, selectOnly, counterRotateLabels, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate, onDuplicate,
+  objects, selectedId, width, height, isReadonly, selectOnly, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate, onDuplicate,
 }: Props) {
   const vLines = Math.floor(width  / GRID_SIZE);
   const hLines = Math.floor(height / GRID_SIZE);
@@ -116,11 +115,8 @@ export default function FloorCanvas({
         const rawDy = touches[0].pageY - lastLoc.current.y;
         lastLoc.current = { x: touches[0].pageX, y: touches[0].pageY };
 
-        // When the parent rotates the canvas 90° CW, canvas axes differ from screen axes:
-        // canvas +X → screen down, canvas +Y → screen left.
-        // Remap so the content always follows the finger.
-        const dx = counterRotateLabels ? rawDy  :  rawDx;
-        const dy = counterRotateLabels ? -rawDx :  rawDy;
+        const dx = rawDx;
+        const dy = rawDy;
 
         const maxTx = (width  * (liveScale.current - 1)) / 2;
         const maxTy = (height * (liveScale.current - 1)) / 2;
@@ -185,7 +181,6 @@ export default function FloorCanvas({
             isSelected={selectedId === obj.id}
             isReadonly={isReadonly}
             selectOnly={selectOnly}
-            counterRotateLabels={counterRotateLabels}
             colorOverride={tableColorOverrides?.[obj.id]}
             isPulsing={pulsingTableIds?.includes(obj.id) ?? false}
             staticOpacity={dimmedTableId === obj.id ? 0.35 : undefined}

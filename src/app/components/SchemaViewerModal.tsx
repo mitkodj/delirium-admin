@@ -45,15 +45,11 @@ export default function SchemaViewerModal({
     }, [floors]);
 
     const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
-    const canvasW = Math.max(activeFloor?.width ?? CANVAS_W, CANVAS_W);
-    const canvasH = Math.max(activeFloor?.height ?? CANVAS_H, CANVAS_H);
+    const canvasW = activeFloor?.width ?? CANVAS_W;
+    const canvasH = activeFloor?.height ?? CANVAS_H;
 
-    const screenIsPortrait = containerH > containerW;
-    const shouldRotate = canvasW > canvasH && screenIsPortrait;
-    const displayW = shouldRotate ? canvasH : canvasW;
-    const displayH = shouldRotate ? canvasW : canvasH;
     const scale = containerW > 0 && containerH > 0
-        ? Math.min(containerW / displayW, containerH / displayH)
+        ? Math.min(containerW / canvasW, containerH / canvasH)
         : 1;
 
     const matched = selectedTableId
@@ -131,9 +127,7 @@ export default function SchemaViewerModal({
                                 height: canvasH,
                                 left: (containerW - canvasW) / 2,
                                 top: (containerH - canvasH) / 2,
-                                transform: shouldRotate
-                                    ? [{ rotate: '90deg' }, { scale }]
-                                    : [{ scale }],
+                                transform: [{ scale }],
                             }}>
                                 <FloorCanvas
                                     objects={activeFloor.objects}
@@ -142,7 +136,7 @@ export default function SchemaViewerModal({
                                     height={canvasH}
                                     isReadonly={true}
                                     selectOnly
-                                    counterRotateLabels={shouldRotate}
+
                                     tableColorOverrides={tableColorOverrides}
                                     onDeselect={() => setSelectedTableId(null)}
                                     onSelect={id => setSelectedTableId(id)}

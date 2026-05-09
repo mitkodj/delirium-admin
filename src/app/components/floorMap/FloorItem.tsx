@@ -15,19 +15,12 @@ const TYPE_STYLES: Record<FloorObjectType, ShapeStyle> = {
   stage_rect:     { fill: '#9b7acc', border: '#9b7acc', labelColor: '#1a1028' },
 };
 
-const DEFAULT_LABELS: Record<FloorObjectType, string> = {
-  table_circle:   'Table',
-  table_vip_rect: 'VIP',
-  stage_circle:   'Stage',
-  stage_rect:     'Stage',
-};
 
 interface Props {
   item: FloorObject;
   isSelected: boolean;
   isReadonly: boolean;
   selectOnly?: boolean;
-  counterRotateLabels?: boolean;
   colorOverride?: string;
   isPulsing?: boolean;
   staticOpacity?: number;
@@ -36,7 +29,7 @@ interface Props {
   onDuplicate: (id: string) => void;
 }
 
-export default function FloorItem({ item, isSelected, isReadonly, selectOnly, counterRotateLabels, colorOverride, isPulsing, staticOpacity, onSelect, onUpdate, onDuplicate }: Props) {
+export default function FloorItem({ item, isSelected, isReadonly, selectOnly, colorOverride, isPulsing, staticOpacity, onSelect, onUpdate, onDuplicate }: Props) {
   // Keep latest prop values accessible inside stable PanResponder closures
   const itemRef = useRef(item);
   itemRef.current = item;
@@ -151,7 +144,6 @@ export default function FloorItem({ item, isSelected, isReadonly, selectOnly, co
           borderWidth: isSelected ? 2 : 1.5,
           zIndex: isSelected ? 10 : 1,
           opacity: pulseAnim,
-          flexDirection: counterRotateLabels ? 'row' : 'column',
         },
       ]}
     >
@@ -163,11 +155,11 @@ export default function FloorItem({ item, isSelected, isReadonly, selectOnly, co
         />
       )}
 
-      <Text style={[styles.label, { color: activeLabelColor }, counterRotateLabels && { transform: [{ rotate: '-90deg' }] }]} numberOfLines={1}>
+      <Text style={[styles.label, { color: activeLabelColor }]} numberOfLines={1}>
         {item.label}
       </Text>
       {item.capacity !== undefined && (
-        <Text style={[styles.capacity, { color: activeLabelColor }, counterRotateLabels && { transform: [{ rotate: '-90deg' }] }]}>
+        <Text style={[styles.capacity, { color: activeLabelColor }]}>
           ({item.capacity})
         </Text>
       )}

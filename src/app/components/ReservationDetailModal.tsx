@@ -134,14 +134,10 @@ export default function ReservationDetailModal({
         ? floors.find(f => f.objects.some(o => reservationTableIds.has(o.id)))
         : undefined;
 
-    const canvasW = Math.max(tableFloor?.width ?? CANVAS_W, CANVAS_W);
-    const canvasH = Math.max(tableFloor?.height ?? CANVAS_H, CANVAS_H);
-    const screenIsPortrait = containerH > containerW;
-    const shouldRotate = canvasW > canvasH && screenIsPortrait;
-    const displayW = shouldRotate ? canvasH : canvasW;
-    const displayH = shouldRotate ? canvasW : canvasH;
+    const canvasW = tableFloor?.width ?? CANVAS_W;
+    const canvasH = tableFloor?.height ?? CANVAS_H;
     const scale = containerW > 0 && containerH > 0
-        ? Math.min(containerW / displayW, containerH / displayH)
+        ? Math.min(containerW / canvasW, containerH / canvasH)
         : 1;
 
     const primaryAction = (() => {
@@ -218,9 +214,7 @@ export default function ReservationDetailModal({
                                     height: canvasH,
                                     left: (containerW - canvasW) / 2,
                                     top: (containerH - canvasH) / 2,
-                                    transform: shouldRotate
-                                        ? [{ rotate: '90deg' }, { scale }]
-                                        : [{ scale }],
+                                    transform: [{ scale }],
                                 }}>
                                     <FloorCanvas
                                         objects={tableFloor.objects}
@@ -229,7 +223,7 @@ export default function ReservationDetailModal({
                                         height={canvasH}
                                         isReadonly
                                         selectOnly
-                                        counterRotateLabels={shouldRotate}
+
                                         tableColorOverrides={tableColorOverrides}
                                         pulsingTableIds={reservation?.tables ?? undefined}
                                         onDeselect={() => {}}

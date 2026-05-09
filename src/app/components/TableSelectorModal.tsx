@@ -33,15 +33,11 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
     const [containerH, setContainerH] = useState(0);
 
     const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
-    const canvasW = Math.max(activeFloor?.width ?? CANVAS_W, CANVAS_W);
-    const canvasH = Math.max(activeFloor?.height ?? CANVAS_H, CANVAS_H);
+    const canvasW = activeFloor?.width ?? CANVAS_W;
+    const canvasH = activeFloor?.height ?? CANVAS_H;
 
-    const screenIsPortrait = containerH > containerW;
-    const shouldRotate = canvasW > canvasH && screenIsPortrait;
-    const displayW = shouldRotate ? canvasH : canvasW;
-    const displayH = shouldRotate ? canvasW : canvasH;
     const scale = containerW > 0 && containerH > 0
-        ? Math.min(containerW / displayW, containerH / displayH)
+        ? Math.min(containerW / canvasW, containerH / canvasH)
         : 1;
 
     useEffect(() => {
@@ -130,9 +126,7 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
                                 height: canvasH,
                                 left: (containerW - canvasW) / 2,
                                 top: (containerH - canvasH) / 2,
-                                transform: shouldRotate
-                                    ? [{ rotate: '90deg' }, { scale }]
-                                    : [{ scale }],
+                                transform: [{ scale }],
                             }}>
                                 <FloorCanvas
                                     objects={activeFloor.objects}
@@ -141,7 +135,7 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
                                     height={canvasH}
                                     isReadonly={true}
                                     selectOnly
-                                    counterRotateLabels={shouldRotate}
+
                                     tableColorOverrides={mergedColorOverrides}
                                     pulsingTableIds={selectedId ? [selectedId] : undefined}
                                     dimmedTableId={selectedId !== suggestedTableId ? suggestedTableId ?? undefined : undefined}

@@ -202,16 +202,9 @@ export default function HostPanel() {
   const isEdit = mode === 'edit';
 
   // Preview scale
-  const screenIsPortrait    = canvasHeight > canvasWrapperWidth;
-  const previewShouldRotate = activeCanvasW > activeCanvasH && screenIsPortrait;
-  const previewDisplayW     = previewShouldRotate ? activeCanvasH : activeCanvasW;
-  const previewDisplayH     = previewShouldRotate ? activeCanvasW : activeCanvasH;
   const previewScale =
     canvasWrapperWidth > 0 && canvasHeight > 0
-      ? Math.min(
-          canvasWrapperWidth / previewDisplayW,
-          canvasHeight       / previewDisplayH,
-        )
+      ? Math.min(canvasWrapperWidth / activeCanvasW, canvasHeight / activeCanvasH)
       : 1;
 
   return (
@@ -274,9 +267,7 @@ export default function HostPanel() {
                 height: activeCanvasH,
                 left: (canvasWrapperWidth - activeCanvasW) / 2,
                 top:  (canvasHeight - activeCanvasH) / 2,
-                transform: previewShouldRotate
-                  ? [{ rotate: '90deg' }, { scale: previewScale }]
-                  : [{ scale: previewScale }],
+                transform: [{ scale: previewScale }],
               }}
             >
               <FloorCanvas
@@ -285,7 +276,7 @@ export default function HostPanel() {
                 width={activeCanvasW}
                 height={activeCanvasH}
                 isReadonly={true}
-                counterRotateLabels={previewShouldRotate}
+
                 onDeselect={() => {}}
                 onSelect={() => {}}
                 onUpdate={() => {}}
