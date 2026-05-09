@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Platform, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Floor, FloorObject, FloorObjectType } from '../../types/FloorMap';
 import FloorCanvas from '../components/floorMap/FloorCanvas';
 import Toolbar from '../components/floorMap/Toolbar';
-import { MOCK_FLOORS } from '../components/floorMap/mockLayout';
 import { postLayout } from '../../utils/service';
 import { useClubData } from '../../providers/ClubDataContext';
 import themeConfig from '../../themes/themeConfig';
@@ -28,8 +27,6 @@ const DEFAULT_CAPACITY: Partial<Record<FloorObjectType, number>> = {
   table_vip_rect: 6,
 };
 
-let nextId = MOCK_FLOORS.reduce((sum, f) => sum + f.objects.length, 0) + 1;
-
 export default function HostPanel() {
   const { floors, setFloors, layoutLoading: loading, loadLayout } = useClubData();
   const [mode, setMode] = useState<Mode>('preview');
@@ -42,6 +39,8 @@ export default function HostPanel() {
   const [renamingFloorId, setRenamingFloorId] = useState<string | null>(null);
   const [floorDraftName, setFloorDraftName] = useState('');
   const [floorsSnapshot, setFloorsSnapshot] = useState<Floor[]>([]);
+  const nextIdRef = useRef(1);
+  const nextIdInitialized = useRef(false);
   const clubId = (globalThis as any).myClubs?.[0]?.id;
 
   const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
@@ -56,6 +55,17 @@ export default function HostPanel() {
   // Set initial active floor once floors are populated
   useEffect(() => {
     if (floors.length > 0 && !activeFloorId) setActiveFloorId(floors[0].id);
+  }, [floors]);
+
+  // Seed nextIdRef from BE data so new object IDs never collide with existing ones
+  useEffect(() => {
+    if (nextIdInitialized.current || floors.length === 0) return;
+    nextIdInitialized.current = true;
+    const max = floors.flatMap(f => f.objects).reduce((m, o) => {
+      const n = parseInt(o.id.replace(/\D/g, ''), 10);
+      return isNaN(n) ? m : Math.max(m, n);
+    }, 0);
+    nextIdRef.current = max + 1;
   }, [floors]);
 
   // ── Mode transitions ──────────────────────────────────────────────
@@ -86,9 +96,10 @@ export default function HostPanel() {
 
   const addObject = (type: FloorObjectType) => {
     const { w, h } = DEFAULT_SIZES[type];
-    const offset = (nextId % 8) * 16;
+    const id = nextIdRef.current++;
+    const offset = (id % 8) * 16;
     const newObj: FloorObject = {
-      id: `obj-${nextId++}`,
+      id: `obj-${id}`,
       type,
       x: 20 + offset,
       y: 20 + offset,
@@ -121,7 +132,7 @@ export default function HostPanel() {
       if (f.id !== activeFloorId) return f;
       const src = f.objects.find(o => o.id === id);
       if (!src) return f;
-      copyId = `obj-${nextId++}`;
+      copyId = `obj-${nextIdRef.current++}`;
       const copy: FloorObject = { ...src, id: copyId, x: src.x + 10, y: src.y + 10 };
       const withCopy = { ...f, objects: [...f.objects, copy] };
       return growFloor(withCopy, copy.x + copy.width, copy.y + copy.height);
