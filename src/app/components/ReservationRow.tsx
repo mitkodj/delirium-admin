@@ -89,17 +89,17 @@ export function ReservationRow({ item, onPress, onEdit, onSeat, onCall, onStatus
                 </TouchableOpacity>
             )}
             {onCall && (
-                <TouchableOpacity style={rowStyles.rowCallBtn} onPress={onCall} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-                    <Ionicons name="call" size={18} color="#22c55e" />
+                <TouchableOpacity style={rowStyles.rowActionBtn} onPress={onCall} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+                    <Ionicons name="call" size={18} color={themeConfig.accent.primary} />
                 </TouchableOpacity>
             )}
             {onStatusChange && (
-                <TouchableOpacity style={rowStyles.rowStatusBtn} onPress={onStatusChange} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-                    <Ionicons name="swap-vertical" size={18} color={themeConfig.text.muted} />
+                <TouchableOpacity style={rowStyles.rowActionBtn} onPress={onStatusChange} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+                    <Ionicons name="swap-vertical" size={18} color={themeConfig.accent.primary} />
                 </TouchableOpacity>
             )}
             {onEdit && (
-                <TouchableOpacity style={rowStyles.rowEditBtn} onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
+                <TouchableOpacity style={rowStyles.rowActionBtn} onPress={onEdit} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
                     <Ionicons name="pencil" size={18} color={themeConfig.accent.primary} />
                 </TouchableOpacity>
             )}
@@ -127,25 +127,12 @@ export const rowStyles = StyleSheet.create({
         alignSelf: 'center',
         marginRight: 4,
     },
-    rowCallBtn: {
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: 'rgba(34, 197, 94, 0.12)',
-        alignSelf: 'center',
-        marginRight: 4,
-    },
-    rowStatusBtn: {
+    rowActionBtn: {
         padding: 8,
         borderRadius: 8,
         backgroundColor: themeConfig.background.primary,
         alignSelf: 'center',
         marginRight: 4,
-    },
-    rowEditBtn: {
-        padding: 8,
-        borderRadius: 8,
-        backgroundColor: themeConfig.background.primary,
-        alignSelf: 'center',
     },
     nameText: {
         fontSize: 14,
