@@ -1,3 +1,431 @@
+import React, { useState } from 'react';
+import {
+    View, Text, TextInput, TouchableOpacity, StyleSheet,
+    ScrollView, Image, ActivityIndicator, Alert,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+import themeConfig from '../../themes/themeConfig';
+import MapPickerModal from '../components/LocationSelectorModal';
+import { uploadBanner, updateClub } from '../../utils/service';
+import { buildAssetUrl } from '../../helpers/utils';
+import { Club } from '../../types/Disco';
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAY_BITS = [1, 2, 4, 8, 16, 32, 64];
+
+const PRESET_COLORS = [
+    '#eab308', '#6366f1', '#22c55e', '#ef4444', '#ec4899',
+    '#06b6d4', '#f97316', '#a855f7', '#ffffff', '#94a3b8',
+];
+
 export default function Profile() {
-  return null;
+    const club: Club = (globalThis as any).myClubs?.[0];
+    const insets = useSafeAreaInsets();
+
+    const [name, setName] = useState(club?.name ?? '');
+    const [phone, setPhone] = useState(club?.phone ?? '');
+    const [openDays, setOpenDays] = useState(club?.openDays ?? 0);
+    const [location, setLocation] = useState<{ address: string; latitude: number; longitude: number } | null>(
+        club?.locationNormalized
+            ? { address: club.locationNormalized, latitude: club.location?.latitude ?? 0, longitude: club.location?.longitude ?? 0 }
+            : null
+    );
+    const [banner, setBanner] = useState<string | null>(
+        club?.defaultBanner ? buildAssetUrl(club.defaultBanner) : null
+    );
+    const [bannerFileName, setBannerFileName] = useState<string>(club?.defaultBanner ?? '');
+    const [bannerChanged, setBannerChanged] = useState(false);
+    const [accentColor, setAccentColor] = useState(club?.accentColor ?? '#eab308');
+    const [hexInput, setHexInput] = useState(club?.accentColor ?? '#eab308');
+    const [mapVisible, setMapVisible] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [saved, setSaved] = useState(false);
+
+    const toggleDay = (bit: number) =>
+        setOpenDays(prev => (prev & bit) ? (prev & ~bit) : (prev | bit));
+
+    const pickBanner = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            quality: 0.8,
+        });
+        if (!result.canceled) {
+            const asset = result.assets[0];
+            if (asset.fileSize && asset.fileSize > 10 * 1024 * 1024) {
+                Alert.alert('Image too large', 'Must be smaller than 10 MB');
+                return;
+            }
+            setBanner(asset.uri);
+            setBannerChanged(true);
+        }
+    };
+
+    const applyHex = (val: string) => {
+        setHexInput(val);
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) setAccentColor(val);
+    };
+
+    const handleSave = async () => {
+        if (!club?.id) return;
+        try {
+            setSaving(true);
+            setSaved(false);
+            setError(null);
+
+            let finalBanner = bannerFileName;
+            if (bannerChanged && banner) {
+                finalBanner = (await uploadBanner(banner) as any).data.fileName;
+                setBannerFileName(finalBanner);
+                setBannerChanged(false);
+            }
+
+            await updateClub(club.id, {
+                name,
+                locationNormalized: location?.address ?? club.locationNormalized,
+                phone,
+                openDays,
+                defaultBanner: finalBanner,
+                accentColor,
+            });
+
+            (globalThis as any).myClubs[0] = {
+                ...club,
+                name,
+                locationNormalized: location?.address ?? club.locationNormalized,
+                phone,
+                openDays,
+                defaultBanner: finalBanner,
+                accentColor,
+            };
+
+            setSaved(true);
+        } catch {
+            setError('Failed to save. Please try again.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <View style={[styles.container, { paddingBottom: insets.bottom + 16 }]}>
+            {error && (
+                <View style={styles.errorBanner}>
+                    <Text style={styles.errorText}>{error}</Text>
+                </View>
+            )}
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+
+                {/* Banner */}
+                <TouchableOpacity style={styles.bannerPicker} onPress={pickBanner} activeOpacity={0.85}>
+                    {banner ? (
+                        <Image source={{ uri: banner }} style={styles.bannerImage} resizeMode="cover" />
+                    ) : (
+                        <View style={styles.bannerPlaceholder}>
+                            <Ionicons name="image-outline" size={36} color={themeConfig.text.muted} />
+                            <Text style={styles.bannerPlaceholderText}>Tap to set banner</Text>
+                        </View>
+                    )}
+                    <View style={styles.bannerEditBadge}>
+                        <Ionicons name="pencil" size={13} color="#fff" />
+                    </View>
+                </TouchableOpacity>
+
+                {/* Name */}
+                <Text style={styles.label}>Club name</Text>
+                <TextInput
+                    style={styles.input}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder="Club name"
+                    placeholderTextColor={themeConfig.text.muted}
+                />
+
+                {/* Phone */}
+                <Text style={styles.label}>Phone</Text>
+                <TextInput
+                    style={styles.input}
+                    value={phone}
+                    onChangeText={setPhone}
+                    placeholder="+1 555 000 000"
+                    placeholderTextColor={themeConfig.text.muted}
+                    keyboardType="phone-pad"
+                />
+
+                {/* Open days */}
+                <Text style={styles.label}>Open days</Text>
+                <View style={styles.daysRow}>
+                    {DAYS.map((day, i) => {
+                        const active = !!(openDays & DAY_BITS[i]);
+                        return (
+                            <TouchableOpacity
+                                key={day}
+                                style={[styles.dayBtn, active && styles.dayBtnActive]}
+                                onPress={() => toggleDay(DAY_BITS[i])}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[styles.dayBtnText, active && styles.dayBtnTextActive]}>
+                                    {day}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+
+                {/* Location */}
+                <Text style={styles.label}>Location</Text>
+                <TouchableOpacity style={styles.locationBtn} onPress={() => setMapVisible(true)} activeOpacity={0.7}>
+                    <Ionicons name="location-outline" size={18} color={themeConfig.accent.primary} />
+                    <Text style={styles.locationText} numberOfLines={2}>
+                        {location?.address ?? 'Tap to select on map'}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={16} color={themeConfig.text.muted} />
+                </TouchableOpacity>
+
+                {/* Accent color */}
+                <Text style={styles.label}>Accent color</Text>
+                <View style={styles.swatchGrid}>
+                    {PRESET_COLORS.map(c => (
+                        <TouchableOpacity
+                            key={c}
+                            style={[styles.swatch, { backgroundColor: c }, c === accentColor && styles.swatchSelected]}
+                            onPress={() => { setAccentColor(c); setHexInput(c); }}
+                            activeOpacity={0.7}
+                        >
+                            {c === accentColor && (
+                                <Ionicons name="checkmark" size={16} color={c === '#ffffff' ? '#000' : '#fff'} />
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+                <View style={styles.hexRow}>
+                    <View style={[styles.hexPreview, { backgroundColor: accentColor }]} />
+                    <TextInput
+                        style={styles.hexInput}
+                        value={hexInput}
+                        onChangeText={applyHex}
+                        placeholder="#000000"
+                        placeholderTextColor={themeConfig.text.muted}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        maxLength={7}
+                    />
+                </View>
+
+            </ScrollView>
+
+            {saved && (
+                <View style={styles.savedBanner}>
+                    <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+                    <Text style={styles.savedText}>Saved successfully</Text>
+                </View>
+            )}
+
+            <TouchableOpacity
+                style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
+                onPress={handleSave}
+                disabled={saving}
+                activeOpacity={0.8}
+            >
+                {saving
+                    ? <ActivityIndicator color="#fff" />
+                    : <Text style={styles.saveBtnText}>Save changes</Text>
+                }
+            </TouchableOpacity>
+
+            <MapPickerModal
+                visible={mapVisible}
+                onClose={() => setMapVisible(false)}
+                onSelect={loc => setLocation(loc)}
+            />
+        </View>
+    );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        backgroundColor: themeConfig.background.primary,
+    },
+    scroll: {
+        paddingBottom: 16,
+    },
+    errorBanner: {
+        backgroundColor: 'rgba(239,68,68,0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(239,68,68,0.4)',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 12,
+    },
+    errorText: {
+        color: '#ef4444',
+        fontSize: 13,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    bannerPicker: {
+        height: 180,
+        borderRadius: 14,
+        overflow: 'hidden',
+        marginBottom: 20,
+        backgroundColor: themeConfig.background.secondary,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+    },
+    bannerImage: {
+        width: '100%',
+        height: '100%',
+    },
+    bannerPlaceholder: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 8,
+    },
+    bannerPlaceholderText: {
+        fontSize: 14,
+        color: themeConfig.text.muted,
+    },
+    bannerEditBadge: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        backgroundColor: themeConfig.accent.primary,
+        borderRadius: 20,
+        padding: 7,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: themeConfig.text.muted,
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
+        marginBottom: 8,
+    },
+    input: {
+        backgroundColor: themeConfig.background.secondary,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        borderRadius: 10,
+        padding: 13,
+        fontSize: 15,
+        color: themeConfig.text.primary,
+        marginBottom: 20,
+    },
+    daysRow: {
+        flexDirection: 'row',
+        gap: 6,
+        marginBottom: 20,
+    },
+    dayBtn: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        backgroundColor: themeConfig.background.secondary,
+        alignItems: 'center',
+    },
+    dayBtnActive: {
+        backgroundColor: themeConfig.accent.primary,
+        borderColor: themeConfig.accent.primary,
+    },
+    dayBtnText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: themeConfig.text.muted,
+    },
+    dayBtnTextActive: {
+        color: themeConfig.text.inverse,
+    },
+    locationBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: themeConfig.background.secondary,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        borderRadius: 10,
+        padding: 13,
+        marginBottom: 20,
+    },
+    locationText: {
+        flex: 1,
+        fontSize: 14,
+        color: themeConfig.text.primary,
+    },
+    swatchGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginBottom: 14,
+    },
+    swatch: {
+        width: 38,
+        height: 38,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    swatchSelected: {
+        borderWidth: 2.5,
+        borderColor: themeConfig.text.primary,
+    },
+    hexRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 20,
+    },
+    hexPreview: {
+        width: 38,
+        height: 38,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+    },
+    hexInput: {
+        flex: 1,
+        backgroundColor: themeConfig.background.secondary,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        borderRadius: 10,
+        padding: 10,
+        fontSize: 14,
+        color: themeConfig.text.primary,
+        fontFamily: 'monospace',
+    },
+    savedBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 8,
+    },
+    savedText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#22c55e',
+    },
+    saveBtn: {
+        backgroundColor: themeConfig.accent.primary,
+        borderRadius: 12,
+        paddingVertical: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    saveBtnDisabled: {
+        opacity: 0.6,
+    },
+    saveBtnText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: themeConfig.text.inverse,
+    },
+});

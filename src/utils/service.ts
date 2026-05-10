@@ -187,6 +187,24 @@ export const createEvent = async (event: DEvent) => {
   }
 };
 
+export type UpdateClubPayload = {
+  name: string;
+  locationNormalized: string;
+  phone: string;
+  openDays: number;
+  defaultBanner: string;
+  accentColor: string;
+};
+
+export const updateClub = async (id: string, payload: UpdateClubPayload) => {
+  try {
+    return await axios.put(`${partyService}/api/discos/${id}`, payload);
+  } catch (e) {
+    console.log('updateClub error', e);
+    return null;
+  }
+};
+
 export const updateEvent = async (id: string, event: Partial<DEvent>) => {
   try {
     return await axios.put(`${partyService}/api/events/${id}`, event);
