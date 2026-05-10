@@ -270,9 +270,9 @@ export const getReservations = async (date: Date, discoId: string) => {
     const end = new Date(date);
     end.setHours(23, 59, 59, 999);
     return await axios.get(`${partyService}/api/reservations`, {
-      params: {
-        '$filter': `DiscoId eq '${discoId}' and ReservationDate ge ${start.toISOString()} and ReservationDate le ${end.toISOString()}`,
-      },
+      // params: {
+      //   '$filter': `DiscoId eq '${discoId}' and ReservationDate ge ${start.toISOString()} and ReservationDate le ${end.toISOString()}`,
+      // },
     });
   } catch (e) {
     console.log('getReservations error', e);

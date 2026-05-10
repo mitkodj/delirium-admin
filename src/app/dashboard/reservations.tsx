@@ -386,6 +386,7 @@ export default function Reservations() {
                     </>
                 }
                 stickySectionHeadersEnabled={false}
+                ListFooterComponent={<View style={styles.listFooter} />}
                 style={styles.list}
                 contentContainerStyle={sections.length === 0 ? styles.listEmpty : undefined}
                 refreshControl={
@@ -604,5 +605,8 @@ const styles = StyleSheet.create({
         color: themeConfig.text.muted,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
+    },
+    listFooter: {
+        height: 88,
     },
 });
