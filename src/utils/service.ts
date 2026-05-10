@@ -293,6 +293,29 @@ export type CreateReservationPayload = {
   clientsCount: number;
 };
 
+export const fetchEventsForDate = async (date: Date, discoId: string) => {
+  return fetchEvents(null as any, null as any, null as any) as any;
+  // try {
+  //   const start = new Date(date);
+  //   start.setHours(0, 0, 0, 0);
+  //   const end = new Date(date);
+  //   end.setHours(23, 59, 59, 999);
+  //   return await axios.get(`${partyService}/api/events`, {
+  //     params: buildODataQuery({
+  //       filter: and(
+  //         eq("DiscoId", discoId),
+  //         ge("StartDate", start.toISOString()),
+  //         le("StartDate", end.toISOString())
+  //       ),
+  //       top: 1,
+  //     })
+  //   });
+  // } catch (e) {
+  //   console.log('fetchEventsForDate error', e);
+  //   return null;
+  // }
+};
+
 export const createReservation = async (payload: CreateReservationPayload) => {
   try {
     return await axios.post(`${partyService}/api/reservations`, payload);

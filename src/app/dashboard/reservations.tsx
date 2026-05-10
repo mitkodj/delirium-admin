@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    SectionList, RefreshControl,
+    SectionList, RefreshControl, Platform, Modal, Pressable, Image,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,21 +12,23 @@ import ReservationFormModal from '../components/ReservationFormModal';
 import ReservationDetailModal from '../components/ReservationDetailModal';
 import AddButton from '../components/AddButton';
 import SchemaViewerModal from '../components/SchemaViewerModal';
-import { Reservation, ReservationStatus } from '../../types/Disco';
+import { Reservation, ReservationStatus, DEvent } from '../../types/Disco';
 import adminStyles from './styles/adminStyles';
 import { useSidebar } from '../../providers/SidebarContext';
 import { useClubData } from '../../providers/ClubDataContext';
-import { getReservations, updateReservation } from '../../utils/service';
+import { getReservations, updateReservation, fetchEventsForDate } from '../../utils/service';
 import { ReservationRow } from '../components/ReservationRow';
+import { buildAssetUrl } from '../../helpers/utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function ReservationsHeader({ navLabel, isSelectedToday, onPrev, onNext, onNew }: {
+function ReservationsHeader({ navLabel, isSelectedToday, onPrev, onNext, onNew, onPickDate }: {
     navLabel: string;
     isSelectedToday: boolean;
     onPrev: () => void;
     onNext: () => void;
     onNew: () => void;
+    onPickDate: () => void;
 }) {
     const insets = useSafeAreaInsets();
     const { sidebarOpen, toggleSidebar } = useSidebar();
@@ -42,10 +45,10 @@ function ReservationsHeader({ navLabel, isSelectedToday, onPrev, onNext, onNew }
                 <TouchableOpacity onPress={onPrev} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                     <Ionicons name="chevron-back" size={22} color={themeConfig.text.primary} />
                 </TouchableOpacity>
-                <View style={headerStyles.labelWrap}>
+                <TouchableOpacity style={headerStyles.labelWrap} onPress={onPickDate} activeOpacity={0.7}>
                     <Text style={headerStyles.navText}>{navLabel}</Text>
                     {isSelectedToday && <Text style={headerStyles.todayBadge}>Today</Text>}
-                </View>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={onNext} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                     <Ionicons name="chevron-forward" size={22} color={themeConfig.text.primary} />
                 </TouchableOpacity>
@@ -147,7 +150,10 @@ export default function Reservations() {
     const [detailVisible, setDetailVisible] = useState(false);
     const [schemaVisible, setSchemaVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState(() => startOfDay(new Date()));
+    const [datePickerVisible, setDatePickerVisible] = useState(false);
+    const [pendingDate, setPendingDate] = useState(() => startOfDay(new Date()));
     const [reservations, setReservations] = useState<Reservation[]>([]);
+    const [currentEvent, setCurrentEvent] = useState<DEvent | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredReservations = useMemo(() => {
@@ -225,11 +231,24 @@ export default function Reservations() {
 
     useEffect(() => { loadLayout(clubId); }, [clubId]);
 
+    const fetchEvents = async () => {
+        const clubId = (globalThis as any).myClubs?.[0]?.id;
+        const events = await fetchEventsForDate(selectedDate, clubId) as any;
+        setCurrentEvent((events.data as any)[0] ?? null);
+    };
+
+    useEffect(() => {
+        fetchEvents();
+    }, [pendingDate]);
+
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchReservations = async () => {
         const clubId = (globalThis as any).myClubs?.[0]?.id;
-    const reservations = await getReservations(selectedDate, clubId) as any;
+        const [reservations] = await Promise.all([
+            getReservations(selectedDate, clubId) as any,
+            
+        ]);
         setReservations(reservations.data as any);
     };
 
@@ -325,6 +344,7 @@ export default function Reservations() {
         weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
     });
 
+    console.log(currentEvent?.banner, buildAssetUrl(currentEvent?.banner as string));
     return (
         <View style={[adminStyles.adminPage, styles.container]}>
             <Stack.Screen
@@ -336,6 +356,7 @@ export default function Reservations() {
                             onPrev={() => shiftDay(-1)}
                             onNext={() => shiftDay(1)}
                             onNew={() => setModalVisible(true)}
+                            onPickDate={() => { setPendingDate(selectedDate); setDatePickerVisible(true); }}
                         />
                     ),
                 }}
@@ -435,6 +456,35 @@ export default function Reservations() {
                     openDetail(r);
                 }}
             />
+
+            <Modal transparent visible={datePickerVisible} animationType="fade" onRequestClose={() => setDatePickerVisible(false)}>
+                <Pressable style={styles.datePickerBackdrop} onPress={() => setDatePickerVisible(false)}>
+                    <View style={styles.datePickerCard}>
+                        {currentEvent?.banner ? (
+                            <View style={styles.eventBannerWrap}>
+                                <Image source={{ uri: buildAssetUrl(currentEvent.banner) }} style={styles.eventBanner} resizeMode="cover" />
+                            </View>
+                        ) : null}
+                        <DateTimePicker
+                            value={pendingDate}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+                            themeVariant="dark"
+                            accentColor="#eab308"
+                            onChange={(_, date) => {
+                                if (date) setPendingDate(startOfDay(date));
+                            }}
+                        />
+                        <TouchableOpacity
+                            style={styles.datePickerSelectBtn}
+                            onPress={() => { setSelectedDate(pendingDate); setDatePickerVisible(false); }}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.datePickerSelectBtnText}>Select</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Pressable>
+            </Modal>
 
         </View>
     );
@@ -608,5 +658,59 @@ const styles = StyleSheet.create({
     },
     listFooter: {
         height: 88,
+    },
+    datePickerBackdrop: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.65)',
+        justifyContent: 'flex-end',
+    },
+    datePickerCard: {
+        backgroundColor: themeConfig.background.secondary,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        overflow: 'hidden',
+        padding: 8,
+        paddingBottom: 24,
+        alignItems: 'center',
+    },
+    eventBannerWrap: {
+        marginHorizontal: 4,
+        marginBottom: 12,
+        borderRadius: 12,
+        overflow: 'hidden',
+        height: 160,
+        alignSelf: 'stretch',
+    },
+    eventBanner: {
+        width: '100%',
+        height: '100%',
+    },
+    eventBannerOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+    },
+    eventBannerName: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#fff',
+    },
+    datePickerSelectBtn: {
+        marginTop: 8,
+        marginHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: 12,
+        backgroundColor: themeConfig.accent.primary,
+        alignItems: 'center',
+        width: '80%',
+    },
+    datePickerSelectBtnText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: themeConfig.text.inverse,
     },
 });
