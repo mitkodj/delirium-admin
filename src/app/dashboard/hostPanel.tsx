@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Platform, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Platform, StyleSheet, ActivityIndicator, PanResponder } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Floor, FloorObject, FloorObjectType } from '../../types/FloorMap';
@@ -41,6 +41,30 @@ export default function HostPanel() {
   const [floorsSnapshot, setFloorsSnapshot] = useState<Floor[]>([]);
   const nextIdRef = useRef(1);
   const nextIdInitialized = useRef(false);
+
+  // ── Edit-mode freehand pan ────────────────────────────────────────
+  const [editPan, setEditPan] = useState({ tx: 0, ty: 0 });
+  const editPanLive = useRef({ tx: 0, ty: 0 });
+  const editPanBase = useRef({ tx: 0, ty: 0 });
+  const selectedIdForPan = useRef<string | null>(null);
+  selectedIdForPan.current = selectedId;
+  const panMeta = useRef({ containerW: 0, containerH: 0, canvasW: 0, canvasH: 0 });
+
+  const editPanResponder = useRef(PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gs) =>
+      selectedIdForPan.current === null && (Math.abs(gs.dx) > 4 || Math.abs(gs.dy) > 4),
+    onPanResponderGrant: () => {
+      editPanBase.current = { ...editPanLive.current };
+    },
+    onPanResponderMove: (_, gs) => {
+      const { containerW, containerH, canvasW, canvasH } = panMeta.current;
+      const tx = Math.min(0, Math.max(Math.min(0, containerW - canvasW), editPanBase.current.tx + gs.dx));
+      const ty = Math.min(0, Math.max(Math.min(0, containerH - canvasH), editPanBase.current.ty + gs.dy));
+      editPanLive.current = { tx, ty };
+      setEditPan({ tx, ty });
+    },
+  })).current;
+
   const clubId = (globalThis as any).myClubs?.[0]?.id;
 
   const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
@@ -70,8 +94,9 @@ export default function HostPanel() {
 
   // ── Mode transitions ──────────────────────────────────────────────
 
-  const enterEdit = () => { setFloorsSnapshot(floors); setEditDate(null); setMode('edit'); };
-  const enterEditForDate = () => { setFloorsSnapshot(floors); setEditDate(new Date()); setMode('edit'); };
+  const resetEditPan = () => { setEditPan({ tx: 0, ty: 0 }); editPanLive.current = { tx: 0, ty: 0 }; };
+  const enterEdit = () => { setFloorsSnapshot(floors); setEditDate(null); setMode('edit'); resetEditPan(); };
+  const enterEditForDate = () => { setFloorsSnapshot(floors); setEditDate(new Date()); setMode('edit'); resetEditPan(); };
   const exitEdit = () => { setSelectedId(null); setEditDate(null); setMode('preview'); };
   const cancelEdit = () => { setFloors(floorsSnapshot); exitEdit(); };
 
@@ -200,6 +225,8 @@ export default function HostPanel() {
   };
 
   const isEdit = mode === 'edit';
+
+  panMeta.current = { containerW: canvasWrapperWidth, containerH: canvasHeight, canvasW: activeCanvasW, canvasH: activeCanvasH };
 
   // Preview scale
   const previewScale =
@@ -345,32 +372,20 @@ export default function HostPanel() {
           </ScrollView>
 
           {/* Canvas */}
-          <View style={styles.canvasWrapper}>
-            <ScrollView
-              style={styles.scrollView}
-              scrollEnabled={selectedId === null}
-              showsVerticalScrollIndicator={false}
-              nestedScrollEnabled
-            >
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator
-                scrollEnabled={selectedId === null}
-                nestedScrollEnabled
-              >
-                <FloorCanvas
-                  objects={activeObjects}
-                  selectedId={selectedId}
-                  width={activeCanvasW}
-                  height={activeCanvasH}
-                  isReadonly={false}
-                  onDeselect={() => setSelectedId(null)}
-                  onSelect={setSelectedId}
-                  onUpdate={updateObject}
-                  onDuplicate={duplicateObject}
-                />
-              </ScrollView>
-            </ScrollView>
+          <View style={styles.canvasWrapper} {...editPanResponder.panHandlers}>
+            <View style={{ transform: [{ translateX: editPan.tx }, { translateY: editPan.ty }] }}>
+              <FloorCanvas
+                objects={activeObjects}
+                selectedId={selectedId}
+                width={activeCanvasW}
+                height={activeCanvasH}
+                isReadonly={false}
+                onDeselect={() => setSelectedId(null)}
+                onSelect={setSelectedId}
+                onUpdate={updateObject}
+                onDuplicate={duplicateObject}
+              />
+            </View>
 
             {selectedId !== null && (
               <TouchableOpacity style={styles.floatingDelete} onPress={deleteSelected} activeOpacity={0.8}>
@@ -576,14 +591,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   // Canvas
-  canvasWrapper: { flex: 1 },
+  canvasWrapper: { flex: 1, overflow: 'hidden' },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     zIndex: 10,
   },
-  scrollView: { flex: 1 },
   floatingDelete: {
     position: 'absolute',
     bottom: 12,

@@ -83,6 +83,7 @@ export default function ReservationDetailModal({
     const [containerH, setContainerH] = useState(0);
     const [showStatusPanel, setShowStatusPanel] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<ReservationStatus>(ReservationStatus.OPEN);
+    const [highlightedTableId, setHighlightedTableId] = useState<string | null>(null);
 
     const onCloseRef = useRef(onClose);
     onCloseRef.current = onClose;
@@ -117,6 +118,7 @@ export default function ReservationDetailModal({
 
     useEffect(() => {
         setShowStatusPanel(false);
+        setHighlightedTableId(null);
     }, [reservation?.id]);
 
     const availableStatuses = STATUS_OPTIONS.filter(s => s !== reservation?.status);
@@ -139,6 +141,18 @@ export default function ReservationDetailModal({
     const scale = containerW > 0 && containerH > 0
         ? Math.min(containerW / canvasW, containerH / canvasH)
         : 1;
+
+    const DETAIL_PULSE_COLOR = '#eab308';
+    const ownTableIds = reservation?.tables ?? [];
+    const isApproved = reservation?.status === ReservationStatus.APPROVED;
+    const detailColorOverrides: Record<string, string> = {
+        ...tableColorOverrides,
+        ...(isApproved ? Object.fromEntries(ownTableIds.map(id => [id, DETAIL_PULSE_COLOR])) : {}),
+        ...(highlightedTableId ? { [highlightedTableId]: DETAIL_PULSE_COLOR } : {}),
+    };
+    const allPulsingIds = highlightedTableId && !ownTableIds.includes(highlightedTableId)
+        ? [...ownTableIds, highlightedTableId]
+        : ownTableIds;
 
     const primaryAction = (() => {
         switch (reservation?.status) {
@@ -224,10 +238,10 @@ export default function ReservationDetailModal({
                                         isReadonly
                                         selectOnly
 
-                                        tableColorOverrides={tableColorOverrides}
-                                        pulsingTableIds={reservation?.tables ?? undefined}
-                                        onDeselect={() => {}}
-                                        onSelect={() => {}}
+                                        tableColorOverrides={detailColorOverrides}
+                                        pulsingTableIds={allPulsingIds.length > 0 ? allPulsingIds : undefined}
+                                        onDeselect={() => setHighlightedTableId(null)}
+                                        onSelect={setHighlightedTableId}
                                         onUpdate={() => {}}
                                         onDuplicate={() => {}}
                                     />

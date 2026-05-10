@@ -228,7 +228,8 @@ export default function Reservations() {
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchReservations = async () => {
-        const reservations = await getReservations(selectedDate) as any;
+        const clubId = (globalThis as any).myClubs?.[0]?.id;
+    const reservations = await getReservations(selectedDate, clubId) as any;
         setReservations(reservations.data as any);
     };
 
