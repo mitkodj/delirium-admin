@@ -8,17 +8,13 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import themeConfig from '../../themes/themeConfig';
 import MapPickerModal from '../components/LocationSelectorModal';
+import ColorPickerModal from '../components/ColorPickerModal';
 import { uploadBanner, updateClub } from '../../utils/service';
 import { buildAssetUrl } from '../../helpers/utils';
 import { Club } from '../../types/Disco';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const DAY_BITS = [1, 2, 4, 8, 16, 32, 64];
-
-const PRESET_COLORS = [
-    '#eab308', '#6366f1', '#22c55e', '#ef4444', '#ec4899',
-    '#06b6d4', '#f97316', '#a855f7', '#ffffff', '#94a3b8',
-];
 
 export default function Profile() {
     const club: Club = (globalThis as any).myClubs?.[0];
@@ -38,8 +34,8 @@ export default function Profile() {
     const [bannerFileName, setBannerFileName] = useState<string>(club?.defaultBanner ?? '');
     const [bannerChanged, setBannerChanged] = useState(false);
     const [accentColor, setAccentColor] = useState(club?.accentColor ?? '#eab308');
-    const [hexInput, setHexInput] = useState(club?.accentColor ?? '#eab308');
     const [mapVisible, setMapVisible] = useState(false);
+    const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [saved, setSaved] = useState(false);
@@ -61,11 +57,6 @@ export default function Profile() {
             setBanner(asset.uri);
             setBannerChanged(true);
         }
-    };
-
-    const applyHex = (val: string) => {
-        setHexInput(val);
-        if (/^#[0-9A-Fa-f]{6}$/.test(val)) setAccentColor(val);
     };
 
     const handleSave = async () => {
@@ -187,33 +178,11 @@ export default function Profile() {
 
                 {/* Accent color */}
                 <Text style={styles.label}>Accent color</Text>
-                <View style={styles.swatchGrid}>
-                    {PRESET_COLORS.map(c => (
-                        <TouchableOpacity
-                            key={c}
-                            style={[styles.swatch, { backgroundColor: c }, c === accentColor && styles.swatchSelected]}
-                            onPress={() => { setAccentColor(c); setHexInput(c); }}
-                            activeOpacity={0.7}
-                        >
-                            {c === accentColor && (
-                                <Ionicons name="checkmark" size={16} color={c === '#ffffff' ? '#000' : '#fff'} />
-                            )}
-                        </TouchableOpacity>
-                    ))}
-                </View>
-                <View style={styles.hexRow}>
-                    <View style={[styles.hexPreview, { backgroundColor: accentColor }]} />
-                    <TextInput
-                        style={styles.hexInput}
-                        value={hexInput}
-                        onChangeText={applyHex}
-                        placeholder="#000000"
-                        placeholderTextColor={themeConfig.text.muted}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        maxLength={7}
-                    />
-                </View>
+                <TouchableOpacity style={styles.colorRow} onPress={() => setColorPickerVisible(true)} activeOpacity={0.7}>
+                    <View style={[styles.colorTile, { backgroundColor: accentColor }]} />
+                    <Text style={styles.colorHex}>{accentColor.toUpperCase()}</Text>
+                    <Ionicons name="chevron-forward" size={16} color={themeConfig.text.muted} />
+                </TouchableOpacity>
 
             </ScrollView>
 
@@ -240,6 +209,12 @@ export default function Profile() {
                 visible={mapVisible}
                 onClose={() => setMapVisible(false)}
                 onSelect={loc => setLocation(loc)}
+            />
+
+            <ColorPickerModal
+                visible={colorPickerVisible}
+                onClose={() => setColorPickerVisible(false)}
+                onSelect={setAccentColor}
             />
         </View>
     );
@@ -270,7 +245,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     bannerPicker: {
-        height: 180,
+        aspectRatio: 1,
         borderRadius: 14,
         overflow: 'hidden',
         marginBottom: 20,
@@ -360,46 +335,30 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: themeConfig.text.primary,
     },
-    swatchGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-        marginBottom: 14,
-    },
-    swatch: {
-        width: 38,
-        height: 38,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    swatchSelected: {
-        borderWidth: 2.5,
-        borderColor: themeConfig.text.primary,
-    },
-    hexRow: {
+    colorRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        marginBottom: 20,
-    },
-    hexPreview: {
-        width: 38,
-        height: 38,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: themeConfig.border.subtle,
-    },
-    hexInput: {
-        flex: 1,
+        gap: 12,
         backgroundColor: themeConfig.background.secondary,
         borderWidth: 1,
         borderColor: themeConfig.border.subtle,
         borderRadius: 10,
-        padding: 10,
+        padding: 12,
+        marginBottom: 20,
+    },
+    colorTile: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+    },
+    colorHex: {
+        flex: 1,
         fontSize: 14,
+        fontWeight: '600',
         color: themeConfig.text.primary,
-        fontFamily: 'monospace',
+        fontVariant: ['tabular-nums'],
     },
     savedBanner: {
         flexDirection: 'row',
