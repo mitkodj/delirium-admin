@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
-import { loadSession } from '../utils/session';
+import { loadSession, refreshSession, registerRefreshInterceptor } from '../utils/session';
 import { getMyClubs } from '../utils/service';
 import themeConfig from '../themes/themeConfig';
 
@@ -11,12 +11,15 @@ export default function Index() {
 
     useEffect(() => {
         (async () => {
-            const session = await loadSession();
+            registerRefreshInterceptor();
+
+            let session = await loadSession();
+            if (!session) session = await refreshSession();
+
             if (session) {
                 try {
                     (globalThis as any).authToken = session.accessToken;
                     const clubs = await getMyClubs(session.accessToken);
-                    console.log('Loaded clubs', clubs);
                     (globalThis as any).myClubs = clubs;
                     setAuthed(true);
                 } catch {
