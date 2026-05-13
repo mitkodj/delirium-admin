@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { Stack, router } from 'expo-router';
 import themeConfig from '../themes/themeConfig';
-import { fetchSuggestedClubs, login } from '../utils/service';
+import { getMyClubs, login } from '../utils/service';
+import { saveSession } from '../utils/session';
 import { useSearchFilters } from '../providers/SearchCriteriaContext';
 
 export default function LoginScreen() {
@@ -29,15 +30,16 @@ export default function LoginScreen() {
             setError(null);
             setLoading(true);
 
-            const token = await login(username, password);
+            const loginData = await login(username, password);
+            if (!loginData) throw new Error('Login failed');
 
-            (globalThis as any).authToken = token;
+            const session = await saveSession(loginData);
+            (globalThis as any).authToken = session.accessToken;
 
-            // const clubs = await getMyClubs(token);
-            const clubs = await fetchSuggestedClubs();
+            const clubs = await getMyClubs(session.accessToken);
 
-            setClubs(clubs?.data);
-            (globalThis as any).myClubs = clubs?.data.slice(0, 1);
+            setClubs(clubs);
+            (globalThis as any).myClubs = clubs;
 
             setLoading(false);
 

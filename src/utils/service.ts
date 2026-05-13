@@ -221,11 +221,10 @@ export const login = async (email: string, password: string) => {
       password
     });
 
-    axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.accessToken}`;
-
-    return res.data.accessToken;
+    console.log('login response', res, res.data);
+    return res.data as { accessToken: string; refreshToken: string; expiresIn: number };
   } catch (e) {
-    console.log('login error', e);
+    console.log('login error', e, JSON.stringify(e));
     return null;
   }
 };

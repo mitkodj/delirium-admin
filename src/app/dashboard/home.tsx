@@ -15,8 +15,8 @@ export default function DashboardHome() {
   const { events, setEvents } = useSearchFilters();
   
   const fetchEventsData = async () : Promise<DEvent[]> => {
-      const clubData = await fetchEvents({} as any, 15, 0);
-      return clubData?.data as any;
+      const events = await fetchEvents({} as any, 15, 0);
+      return events?.data as any;
   };
 
   useEffect(() => {
