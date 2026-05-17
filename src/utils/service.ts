@@ -239,7 +239,7 @@ export const getMyClubs = async (token: string) => {
 
     return res.data;
   } catch (e) {
-    console.log('getMyClubs error', e);
+    console.log('getMyClubs error', e, JSON.stringify(e));
     return null;
   }
 };

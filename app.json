@@ -25,7 +25,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
+      "edgeToEdgeEnabled": false,
+      "statusBar": {
+        "barStyle": "light-content",
+        "backgroundColor": "transparent"
+      },
       "predictiveBackGestureEnabled": false,
       "package": "com.delirium.admin"
     },

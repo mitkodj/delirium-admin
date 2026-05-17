@@ -420,46 +420,36 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
             </View>
 
             {/* Date picker */}
-            <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)}>
-                <View style={styles.pickerOverlay}>
-                    <View style={styles.pickerContainer}>
-                        <DateTimePicker
-                            value={date}
-                            mode="date"
-                            display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                            onChange={mergeDate}
-                            themeVariant="dark"
-                            style={styles.picker}
-                        />
-                        {Platform.OS === 'ios' && (
+            {Platform.OS === 'ios' ? (
+                <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)}>
+                    <View style={styles.pickerOverlay}>
+                        <View style={styles.pickerContainer}>
+                            <DateTimePicker value={date} mode="date" display="inline" onChange={mergeDate} themeVariant="dark" style={styles.picker} />
                             <TouchableOpacity style={styles.pickerDone} onPress={() => setShowDatePicker(false)}>
                                 <Text style={styles.pickerDoneText}>Done</Text>
                             </TouchableOpacity>
-                        )}
+                        </View>
                     </View>
-                </View>
-            </Modal>
+                </Modal>
+            ) : showDatePicker ? (
+                <DateTimePicker value={date} mode="date" display="default" onChange={mergeDate} />
+            ) : null}
 
             {/* Time picker */}
-            <Modal transparent animationType="slide" visible={showTimePicker} onRequestClose={() => setShowTimePicker(false)}>
-                <View style={styles.pickerOverlay}>
-                    <View style={styles.pickerContainer}>
-                        <DateTimePicker
-                            value={date}
-                            mode="time"
-                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                            onChange={mergeTime}
-                            themeVariant="dark"
-                            style={styles.picker}
-                        />
-                        {Platform.OS === 'ios' && (
+            {Platform.OS === 'ios' ? (
+                <Modal transparent animationType="slide" visible={showTimePicker} onRequestClose={() => setShowTimePicker(false)}>
+                    <View style={styles.pickerOverlay}>
+                        <View style={styles.pickerContainer}>
+                            <DateTimePicker value={date} mode="time" display="spinner" onChange={mergeTime} themeVariant="dark" style={styles.picker} />
                             <TouchableOpacity style={styles.pickerDone} onPress={() => setShowTimePicker(false)}>
                                 <Text style={styles.pickerDoneText}>Done</Text>
                             </TouchableOpacity>
-                        )}
+                        </View>
                     </View>
-                </View>
-            </Modal>
+                </Modal>
+            ) : showTimePicker ? (
+                <DateTimePicker value={date} mode="time" display="default" onChange={mergeTime} />
+            ) : null}
 
             {/* Table selector */}
             <TableSelectorModal

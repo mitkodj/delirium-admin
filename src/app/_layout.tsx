@@ -16,6 +16,8 @@ export default function RootLayout() {
                             headerTintColor: '#fff',
                             headerTitleStyle: { fontWeight: 'bold' },
                             animation: 'slide_from_right',
+                            statusBarStyle: 'light',
+                            statusBarTranslucent: true,
                         }}
                     >
                         <Stack.Screen name="index" options={{ headerShown: false }} />
