@@ -66,7 +66,6 @@ export default function HostPanel() {
   })).current;
 
   const clubId = (globalThis as any).myClubs?.[0]?.id;
-  console.log('Club ID for layout', clubId, (globalThis as any).myClubs);
 
   const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
   const activeObjects = activeFloor?.objects ?? [];

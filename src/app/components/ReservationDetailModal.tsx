@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet,
-    Modal, Pressable, Animated, PanResponder, Linking,
+    Modal, Pressable, Animated, PanResponder, Linking, Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -171,9 +171,13 @@ export default function ReservationDetailModal({
                     {...panResponder.panHandlers}
                     style={[styles.card, { opacity: opacityAnim, transform: [{ scale: scaleAnim }, { translateY }] }]}
                 >
-                    {/* Drag pill */}
+                    {/* Drag pill + close button */}
                     <View style={styles.pillRow}>
-                        <View style={styles.pill} />
+                        <View style={styles.pillSide}>
+                            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7} hitSlop={8}>
+                                <Ionicons name="close" size={20} color={themeConfig.text.muted} />
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     {/* Info row */}
@@ -259,8 +263,19 @@ export default function ReservationDetailModal({
                     {/* Action buttons */}
                     {primaryAction && (
                         <View style={styles.actionsRow}>
-                            <TouchableOpacity style={styles.cancelBtn} onPress={onCancel} activeOpacity={0.7}>
-                                <Ionicons name="close" size={20} color="#ef4444" />
+                            <TouchableOpacity
+                                style={styles.cancelBtn}
+                                onPress={() => Alert.alert(
+                                    'Cancel reservation',
+                                    'Would you really like to cancel this reservation?',
+                                    [
+                                        { text: 'No', style: 'cancel' },
+                                        { text: 'Yes, cancel it', style: 'destructive', onPress: onCancel },
+                                    ]
+                                )}
+                                activeOpacity={0.7}
+                            >
+                                <Ionicons name="trash-outline" size={20} color="#ef4444" />
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.seatBtn} onPress={primaryAction.onPress} activeOpacity={0.7}>
                                 {primaryAction.renderIcon()}
@@ -290,18 +305,26 @@ const styles = StyleSheet.create({
     },
     rowWrapper: {
         paddingHorizontal: 8,
-        paddingTop: 8,
     },
     pillRow: {
+        flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: 10,
-        paddingBottom: 4,
+        paddingHorizontal: 12,
+        paddingTop: 12,
+        paddingBottom: 8,
+    },
+    pillSide: {
+        flex: 1,
+        alignItems: 'flex-end',
     },
     pill: {
         width: 36,
         height: 4,
         borderRadius: 2,
         backgroundColor: themeConfig.border.subtle,
+    },
+    closeBtn: {
+        padding: 4,
     },
     statusPanel: {
         flexDirection: 'row',

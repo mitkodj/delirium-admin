@@ -29,6 +29,9 @@ export type Club = {
   description?: string;
   date?: string;
   accentColor?: string;
+  dayTimeStart?: string;
+  nightTimeStart?: string;
+  defaultStartHour?: string;
 };
 
 export type DEvent = {

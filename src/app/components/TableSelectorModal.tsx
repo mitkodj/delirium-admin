@@ -16,29 +16,39 @@ type SelectedTable = { id: string; label: string };
 
 type Props = {
     visible: boolean;
-    suggestedTableId?: string | null;
+    initialSelectedIds?: string[];
+    clientsCount?: number;
     currentStatusColor?: string;
     tableColorOverrides?: Record<string, string>;
     onClose: () => void;
-    onChoose: (table: SelectedTable) => void;
+    onChoose: (tables: SelectedTable[]) => void;
 };
 
-export default function TableSelectorModal({ visible, suggestedTableId, currentStatusColor, tableColorOverrides, onClose, onChoose }: Props) {
+export default function TableSelectorModal({
+    visible,
+    initialSelectedIds,
+    clientsCount,
+    currentStatusColor,
+    tableColorOverrides,
+    onClose,
+    onChoose,
+}: Props) {
     const clubId = (globalThis as any).myClubs?.[0]?.id;
     const { floors, layoutLoading, loadLayout } = useClubData();
 
     const [activeFloorId, setActiveFloorId] = useState<string>();
-    const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [containerW, setContainerW] = useState(0);
     const [containerH, setContainerH] = useState(0);
 
     const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
     const canvasW = activeFloor?.width ?? CANVAS_W;
     const canvasH = activeFloor?.height ?? CANVAS_H;
-
     const scale = containerW > 0 && containerH > 0
         ? Math.min(containerW / canvasW, containerH / canvasH)
         : 1;
+
+    const allObjects = floors.flatMap(f => f.objects);
 
     useEffect(() => {
         if (visible && clubId) loadLayout(clubId);
@@ -48,41 +58,52 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
         if (floors.length > 0 && !activeFloorId) setActiveFloorId(floors[0].id);
     }, [floors]);
 
-    // Pre-select suggested table when floors load or suggestion changes
+    // Seed local selection from parent whenever the modal opens
     useEffect(() => {
-        if (suggestedTableId) setSelectedId(suggestedTableId);
-    }, [suggestedTableId, floors]);
+        if (visible) setSelectedIds(new Set(initialSelectedIds ?? []));
+    }, [visible]);
 
-    // Merge all reserved-table colours with the currently selected table's colour
     const mergedColorOverrides: Record<string, string> = {
         ...(tableColorOverrides ?? {}),
-        ...(selectedId && currentStatusColor ? { [selectedId]: currentStatusColor } : {}),
+        ...Object.fromEntries(
+            [...selectedIds].map(id => [id, currentStatusColor ?? themeConfig.accent.primary])
+        ),
     };
 
     const handleSelect = (id: string) => {
-        const obj = floors.flatMap(f => f.objects).find(o => o.id === id);
-        if (obj && TABLE_TYPES.has(obj.type)) setSelectedId(id);
+        const obj = allObjects.find(o => o.id === id);
+        if (!obj || !TABLE_TYPES.has(obj.type)) return;
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) { next.delete(id); } else { next.add(id); }
+            return next;
+        });
     };
 
-    const handleChoose = () => {
-        const obj = floors.flatMap(f => f.objects).find(o => o.id === selectedId);
-        if (!obj) return;
-        onChoose({ id: obj.id, label: obj.label ?? obj.id });
+    const handleDone = () => {
+        const tables: SelectedTable[] = [...selectedIds].map(id => {
+            const obj = allObjects.find(o => o.id === id);
+            return { id, label: obj?.label ?? id };
+        });
+        onChoose(tables);
         onClose();
     };
+
+    const peopleLabel = clientsCount !== undefined && !isNaN(clientsCount)
+        ? ` (${clientsCount} ${clientsCount === 1 ? 'person' : 'people'})`
+        : '';
 
     return (
         <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
             <View style={styles.container}>
 
                 <View style={styles.header}>
-                    <Text style={styles.title}>Select Table</Text>
+                    <Text style={styles.title}>Select Tables{peopleLabel}</Text>
                     <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                         <Ionicons name="close" size={24} color={themeConfig.text.muted} />
                     </TouchableOpacity>
                 </View>
 
-                {/* Floor tabs — hidden when only one floor */}
                 {floors.length > 1 && (
                     <ScrollView
                         horizontal
@@ -105,7 +126,6 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
                     </ScrollView>
                 )}
 
-                {/* Canvas */}
                 <View
                     style={styles.canvasWrapper}
                     onLayout={e => {
@@ -130,15 +150,13 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
                             }}>
                                 <FloorCanvas
                                     objects={activeFloor.objects}
-                                    selectedId={selectedId}
+                                    selectedId={null}
                                     width={canvasW}
                                     height={canvasH}
-                                    isReadonly={true}
+                                    isReadonly
                                     selectOnly
-
                                     tableColorOverrides={mergedColorOverrides}
-                                    pulsingTableIds={selectedId ? [selectedId] : undefined}
-                                    dimmedTableId={selectedId !== suggestedTableId ? suggestedTableId ?? undefined : undefined}
+                                    pulsingTableIds={selectedIds.size > 0 ? [...selectedIds] : undefined}
                                     onDeselect={() => {}}
                                     onSelect={handleSelect}
                                     onUpdate={() => {}}
@@ -149,20 +167,16 @@ export default function TableSelectorModal({ visible, suggestedTableId, currentS
                     )}
                 </View>
 
-                {/* Bottom: hint + Choose button */}
                 <View style={styles.bottom}>
                     <Text style={styles.hint}>
-                        {selectedId
-                            ? `Selected: ${floors.flatMap(f => f.objects).find(o => o.id === selectedId)?.label ?? selectedId}`
-                            : 'Tap a table to select it'}
+                        {selectedIds.size === 0
+                            ? 'Tap a table to select it'
+                            : `${selectedIds.size} table${selectedIds.size > 1 ? 's' : ''} selected — tap again to deselect`}
                     </Text>
-                    <TouchableOpacity
-                        style={[styles.chooseBtn, !selectedId && styles.chooseBtnDisabled]}
-                        onPress={handleChoose}
-                        disabled={!selectedId}
-                        activeOpacity={0.8}
-                    >
-                        <Text style={styles.chooseBtnText}>Choose</Text>
+                    <TouchableOpacity style={styles.chooseBtn} onPress={handleDone} activeOpacity={0.8}>
+                        <Text style={styles.chooseBtnText}>
+                            {selectedIds.size === 0 ? 'Done' : `Confirm ${selectedIds.size} table${selectedIds.size > 1 ? 's' : ''}`}
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -240,9 +254,6 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: themeConfig.accent.primary,
         alignItems: 'center',
-    },
-    chooseBtnDisabled: {
-        opacity: 0.4,
     },
     chooseBtnText: {
         fontSize: 15,

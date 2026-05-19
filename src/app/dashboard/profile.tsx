@@ -34,6 +34,11 @@ export default function Profile() {
     const [bannerFileName, setBannerFileName] = useState<string>(club?.defaultBanner ?? '');
     const [bannerChanged, setBannerChanged] = useState(false);
     const [accentColor, setAccentColor] = useState(club?.accentColor ?? '#eab308');
+    const [dayEnabled, setDayEnabled] = useState(!!(club?.dayTimeStart));
+    const [dayTimeStart, setDayTimeStart] = useState(club?.dayTimeStart ?? '');
+    const [nightEnabled, setNightEnabled] = useState(!!(club?.nightTimeStart));
+    const [nightTimeStart, setNightTimeStart] = useState(club?.nightTimeStart ?? '');
+    const [defaultStartHour, setDefaultStartHour] = useState(club?.defaultStartHour ?? '');
     const [mapVisible, setMapVisible] = useState(false);
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -61,6 +66,18 @@ export default function Profile() {
 
     const handleSave = async () => {
         if (!club?.id) return;
+        if (dayEnabled && !dayTimeStart.trim()) {
+            setError('Daytime start time is required when Daytime is enabled.');
+            return;
+        }
+        if (nightEnabled && !nightTimeStart.trim()) {
+            setError('Nighttime start time is required when Nighttime is enabled.');
+            return;
+        }
+        if (!defaultStartHour.trim()) {
+            setError('Default start hour is required.');
+            return;
+        }
         try {
             setSaving(true);
             setSaved(false);
@@ -80,6 +97,9 @@ export default function Profile() {
                 openDays,
                 defaultBanner: finalBanner,
                 accentColor,
+                dayTimeStart: dayEnabled ? dayTimeStart.trim() : undefined,
+                nightTimeStart: nightEnabled ? nightTimeStart.trim() : undefined,
+                defaultStartHour: defaultStartHour.trim(),
             });
 
             (globalThis as any).myClubs[0] = {
@@ -90,6 +110,9 @@ export default function Profile() {
                 openDays,
                 defaultBanner: finalBanner,
                 accentColor,
+                dayTimeStart: dayEnabled ? dayTimeStart.trim() : undefined,
+                nightTimeStart: nightEnabled ? nightTimeStart.trim() : undefined,
+                defaultStartHour: defaultStartHour.trim(),
             };
 
             setSaved(true);
@@ -183,6 +206,48 @@ export default function Profile() {
                     <Text style={styles.colorHex}>{accentColor.toUpperCase()}</Text>
                     <Ionicons name="chevron-forward" size={16} color={themeConfig.text.muted} />
                 </TouchableOpacity>
+
+                {/* Daytime */}
+                <TouchableOpacity style={styles.checkboxRow} onPress={() => setDayEnabled(prev => !prev)} activeOpacity={0.7}>
+                    <View style={[styles.checkbox, dayEnabled && styles.checkboxActive]}>
+                        {dayEnabled && <Ionicons name="checkmark" size={14} color={themeConfig.text.inverse} />}
+                    </View>
+                    <Text style={styles.checkboxLabel}>Daytime</Text>
+                </TouchableOpacity>
+                <TextInput
+                    style={[styles.input, !dayEnabled && styles.inputDisabled]}
+                    value={dayTimeStart}
+                    onChangeText={setDayTimeStart}
+                    placeholder="e.g. 14:00"
+                    placeholderTextColor={themeConfig.text.muted}
+                    editable={dayEnabled}
+                />
+
+                {/* Nighttime */}
+                <TouchableOpacity style={styles.checkboxRow} onPress={() => setNightEnabled(prev => !prev)} activeOpacity={0.7}>
+                    <View style={[styles.checkbox, nightEnabled && styles.checkboxActive]}>
+                        {nightEnabled && <Ionicons name="checkmark" size={14} color={themeConfig.text.inverse} />}
+                    </View>
+                    <Text style={styles.checkboxLabel}>Nighttime</Text>
+                </TouchableOpacity>
+                <TextInput
+                    style={[styles.input, !nightEnabled && styles.inputDisabled]}
+                    value={nightTimeStart}
+                    onChangeText={setNightTimeStart}
+                    placeholder="e.g. 22:00"
+                    placeholderTextColor={themeConfig.text.muted}
+                    editable={nightEnabled}
+                />
+
+                {/* Default start hour */}
+                <Text style={styles.label}>Default start hour <Text style={styles.required}>*</Text></Text>
+                <TextInput
+                    style={styles.input}
+                    value={defaultStartHour}
+                    onChangeText={setDefaultStartHour}
+                    placeholder="e.g. 23:00"
+                    placeholderTextColor={themeConfig.text.muted}
+                />
 
             </ScrollView>
 
@@ -386,5 +451,36 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: themeConfig.text.inverse,
+    },
+    checkboxRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 10,
+    },
+    checkbox: {
+        width: 22,
+        height: 22,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: themeConfig.border.subtle,
+        backgroundColor: themeConfig.background.secondary,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    checkboxActive: {
+        backgroundColor: themeConfig.accent.primary,
+        borderColor: themeConfig.accent.primary,
+    },
+    checkboxLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: themeConfig.text.primary,
+    },
+    inputDisabled: {
+        opacity: 0.4,
+    },
+    required: {
+        color: '#ef4444',
     },
 });

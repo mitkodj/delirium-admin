@@ -308,24 +308,7 @@ export default function Reservations() {
     const handleApprove = (item: Reservation) => updateStatus(item, ReservationStatus.APPROVED);
     const handleSeat    = (item: Reservation) => updateStatus(item, ReservationStatus.SEATED);
     const handleGone    = (item: Reservation) => updateStatus(item, ReservationStatus.GONE);
-
-    const handleCancel = async (item: Reservation) => {
-        const clubId = (globalThis as any).myClubs?.[0]?.id;
-        await updateReservation(item.id, {
-            discoId: clubId,
-            firstName: item.firstName,
-            lastName: item.lastName,
-            reservationDate: item.reservationDate,
-            tables: item.tables ?? undefined,
-            phoneNumber: item.phoneNumber,
-            comment: item.comment,
-            clientsCount: item.clientsCount ?? 1,
-            status: ReservationStatus.CANCELLED,
-        });
-        const cancelled = { ...item, status: ReservationStatus.CANCELLED };
-        setReservations(prev => prev.map(r => r.id === item.id ? cancelled : r));
-        setDetailReservation(prev => prev?.id === item.id ? cancelled : prev);
-    };
+    const handleCancel    = (item: Reservation) => updateStatus(item, ReservationStatus.CANCELLED);
 
     const handleSave = (saved: Reservation) => {
         setReservations(prev =>
