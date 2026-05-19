@@ -195,7 +195,9 @@ export type UpdateClubPayload = {
   defaultBanner: string;
   accentColor: string;
   dayTimeStart?: string;
+  dayTimeEnd?: string;
   nightTimeStart?: string;
+  nightTimeEnd?: string;
   defaultStartHour?: string;
 };
 
@@ -285,10 +287,14 @@ export const updateReservation = async (id: string, reservation: CreateReservati
 
 export const getReservations = async (date: Date, discoId: string) => {
   try {
-    const dateStr = date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
+    console.log(`ReservationDate eq ${dateStr} and DiscoId eq ${discoId}`);
     return await axios.get(`${partyService}/api/reservations`, {
       params: {
-        '$filter': `ReservationDate eq ${dateStr}`,
+        '$filter': `ReservationDate eq ${dateStr} and DiscoId eq ${discoId}`,
       },
     });
   } catch (e) {

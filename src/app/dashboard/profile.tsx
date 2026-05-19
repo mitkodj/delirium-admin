@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    ScrollView, Image, ActivityIndicator, Alert,
+    ScrollView, Image, ActivityIndicator, Alert, Platform, Modal,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,9 +37,12 @@ export default function Profile() {
     const [accentColor, setAccentColor] = useState(club?.accentColor ?? '#eab308');
     const [dayEnabled, setDayEnabled] = useState(!!(club?.dayTimeStart));
     const [dayTimeStart, setDayTimeStart] = useState(club?.dayTimeStart ?? '');
+    const [dayTimeEnd, setDayTimeEnd] = useState(club?.dayTimeEnd ?? '');
     const [nightEnabled, setNightEnabled] = useState(!!(club?.nightTimeStart));
     const [nightTimeStart, setNightTimeStart] = useState(club?.nightTimeStart ?? '');
+    const [nightTimeEnd, setNightTimeEnd] = useState(club?.nightTimeEnd ?? '');
     const [defaultStartHour, setDefaultStartHour] = useState(club?.defaultStartHour ?? '');
+    const [activeTimePicker, setActiveTimePicker] = useState<'dayStart' | 'dayEnd' | 'nightStart' | 'nightEnd' | null>(null);
     const [mapVisible, setMapVisible] = useState(false);
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -47,6 +51,34 @@ export default function Profile() {
 
     const toggleDay = (bit: number) =>
         setOpenDays(prev => (prev & bit) ? (prev & ~bit) : (prev | bit));
+
+    const timeToDate = (t: string): Date => {
+        const d = new Date();
+        const [h, m] = t.split(':').map(Number);
+        d.setHours(isNaN(h) ? 0 : h, isNaN(m) ? 0 : m, 0, 0);
+        return d;
+    };
+
+    const dateToTime = (d: Date) =>
+        `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+
+    const pickerValue = activeTimePicker
+        ? timeToDate(
+            activeTimePicker === 'dayStart' ? dayTimeStart :
+            activeTimePicker === 'dayEnd'   ? dayTimeEnd :
+            activeTimePicker === 'nightStart' ? nightTimeStart : nightTimeEnd
+          )
+        : new Date();
+
+    const handleTimePick = (_: any, selected?: Date) => {
+        if (Platform.OS === 'android') setActiveTimePicker(null);
+        if (!selected) return;
+        const t = dateToTime(selected);
+        if (activeTimePicker === 'dayStart')   setDayTimeStart(t);
+        if (activeTimePicker === 'dayEnd')     setDayTimeEnd(t);
+        if (activeTimePicker === 'nightStart') setNightTimeStart(t);
+        if (activeTimePicker === 'nightEnd')   setNightTimeEnd(t);
+    };
 
     const pickBanner = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -66,12 +98,12 @@ export default function Profile() {
 
     const handleSave = async () => {
         if (!club?.id) return;
-        if (dayEnabled && !dayTimeStart.trim()) {
-            setError('Daytime start time is required when Daytime is enabled.');
+        if (dayEnabled && (!dayTimeStart.trim() || !dayTimeEnd.trim())) {
+            setError('Daytime start and end times are required when Daytime is enabled.');
             return;
         }
-        if (nightEnabled && !nightTimeStart.trim()) {
-            setError('Nighttime start time is required when Nighttime is enabled.');
+        if (nightEnabled && (!nightTimeStart.trim() || !nightTimeEnd.trim())) {
+            setError('Nighttime start and end times are required when Nighttime is enabled.');
             return;
         }
         if (!defaultStartHour.trim()) {
@@ -98,7 +130,9 @@ export default function Profile() {
                 defaultBanner: finalBanner,
                 accentColor,
                 dayTimeStart: dayEnabled ? dayTimeStart.trim() : undefined,
+                dayTimeEnd: dayEnabled ? dayTimeEnd.trim() : undefined,
                 nightTimeStart: nightEnabled ? nightTimeStart.trim() : undefined,
+                nightTimeEnd: nightEnabled ? nightTimeEnd.trim() : undefined,
                 defaultStartHour: defaultStartHour.trim(),
             });
 
@@ -111,7 +145,9 @@ export default function Profile() {
                 defaultBanner: finalBanner,
                 accentColor,
                 dayTimeStart: dayEnabled ? dayTimeStart.trim() : undefined,
+                dayTimeEnd: dayEnabled ? dayTimeEnd.trim() : undefined,
                 nightTimeStart: nightEnabled ? nightTimeStart.trim() : undefined,
+                nightTimeEnd: nightEnabled ? nightTimeEnd.trim() : undefined,
                 defaultStartHour: defaultStartHour.trim(),
             };
 
@@ -214,14 +250,28 @@ export default function Profile() {
                     </View>
                     <Text style={styles.checkboxLabel}>Daytime</Text>
                 </TouchableOpacity>
-                <TextInput
-                    style={[styles.input, !dayEnabled && styles.inputDisabled]}
-                    value={dayTimeStart}
-                    onChangeText={setDayTimeStart}
-                    placeholder="e.g. 14:00"
-                    placeholderTextColor={themeConfig.text.muted}
-                    editable={dayEnabled}
-                />
+                <View style={styles.timeRow}>
+                    <TouchableOpacity
+                        style={[styles.timePill, styles.timeInput, !dayEnabled && styles.inputDisabled]}
+                        onPress={() => dayEnabled && setActiveTimePicker('dayStart')}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="time-outline" size={15} color={dayEnabled ? themeConfig.accent.primary : themeConfig.text.muted} />
+                        <Text style={[styles.timePillText, !dayTimeStart && styles.timePillPlaceholder]}>
+                            {dayTimeStart || 'Start'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.timePill, styles.timeInput, !dayEnabled && styles.inputDisabled]}
+                        onPress={() => dayEnabled && setActiveTimePicker('dayEnd')}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="time-outline" size={15} color={dayEnabled ? themeConfig.accent.primary : themeConfig.text.muted} />
+                        <Text style={[styles.timePillText, !dayTimeEnd && styles.timePillPlaceholder]}>
+                            {dayTimeEnd || 'End'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
 
                 {/* Nighttime */}
                 <TouchableOpacity style={styles.checkboxRow} onPress={() => setNightEnabled(prev => !prev)} activeOpacity={0.7}>
@@ -230,14 +280,28 @@ export default function Profile() {
                     </View>
                     <Text style={styles.checkboxLabel}>Nighttime</Text>
                 </TouchableOpacity>
-                <TextInput
-                    style={[styles.input, !nightEnabled && styles.inputDisabled]}
-                    value={nightTimeStart}
-                    onChangeText={setNightTimeStart}
-                    placeholder="e.g. 22:00"
-                    placeholderTextColor={themeConfig.text.muted}
-                    editable={nightEnabled}
-                />
+                <View style={styles.timeRow}>
+                    <TouchableOpacity
+                        style={[styles.timePill, styles.timeInput, !nightEnabled && styles.inputDisabled]}
+                        onPress={() => nightEnabled && setActiveTimePicker('nightStart')}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="time-outline" size={15} color={nightEnabled ? themeConfig.accent.primary : themeConfig.text.muted} />
+                        <Text style={[styles.timePillText, !nightTimeStart && styles.timePillPlaceholder]}>
+                            {nightTimeStart || 'Start'}
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.timePill, styles.timeInput, !nightEnabled && styles.inputDisabled]}
+                        onPress={() => nightEnabled && setActiveTimePicker('nightEnd')}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="time-outline" size={15} color={nightEnabled ? themeConfig.accent.primary : themeConfig.text.muted} />
+                        <Text style={[styles.timePillText, !nightTimeEnd && styles.timePillPlaceholder]}>
+                            {nightTimeEnd || 'End'}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
 
                 {/* Default start hour */}
                 <Text style={styles.label}>Default start hour <Text style={styles.required}>*</Text></Text>
@@ -281,6 +345,39 @@ export default function Profile() {
                 onClose={() => setColorPickerVisible(false)}
                 onSelect={setAccentColor}
             />
+
+            {/* Time picker — iOS modal, Android inline */}
+            {Platform.OS === 'ios' ? (
+                <Modal
+                    transparent
+                    animationType="slide"
+                    visible={activeTimePicker !== null}
+                    onRequestClose={() => setActiveTimePicker(null)}
+                >
+                    <View style={styles.pickerOverlay}>
+                        <View style={styles.pickerContainer}>
+                            <DateTimePicker
+                                value={pickerValue}
+                                mode="time"
+                                display="spinner"
+                                onChange={handleTimePick}
+                                themeVariant="dark"
+                                style={{ width: '100%' }}
+                            />
+                            <TouchableOpacity style={styles.pickerDone} onPress={() => setActiveTimePicker(null)}>
+                                <Text style={styles.pickerDoneText}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            ) : activeTimePicker !== null ? (
+                <DateTimePicker
+                    value={pickerValue}
+                    mode="time"
+                    display="default"
+                    onChange={handleTimePick}
+                />
+            ) : null}
         </View>
     );
 }
@@ -482,5 +579,60 @@ const styles = StyleSheet.create({
     },
     required: {
         color: '#ef4444',
+    },
+    timeRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 20,
+    },
+    timeInput: {
+        flex: 1,
+        marginBottom: 0,
+    },
+    timePill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 7,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        borderRadius: 10,
+        paddingVertical: 13,
+        paddingHorizontal: 12,
+        backgroundColor: themeConfig.background.secondary,
+    },
+    timePillText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: themeConfig.accent.primary,
+    },
+    timePillPlaceholder: {
+        color: themeConfig.text.muted,
+        fontWeight: '400',
+    },
+    pickerOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'flex-end',
+    },
+    pickerContainer: {
+        backgroundColor: '#111',
+        paddingTop: 16,
+        paddingBottom: 24,
+        paddingHorizontal: 20,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+    },
+    pickerDone: {
+        marginTop: 12,
+        alignSelf: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 32,
+        borderRadius: 8,
+        backgroundColor: themeConfig.background.secondary,
+    },
+    pickerDoneText: {
+        color: themeConfig.accent.primary,
+        fontWeight: '700',
+        fontSize: 14,
     },
 });

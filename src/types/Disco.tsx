@@ -30,7 +30,9 @@ export type Club = {
   date?: string;
   accentColor?: string;
   dayTimeStart?: string;
+  dayTimeEnd?: string;
   nightTimeStart?: string;
+  nightTimeEnd?: string;
   defaultStartHour?: string;
 };
 
