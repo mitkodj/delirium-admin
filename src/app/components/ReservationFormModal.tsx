@@ -76,6 +76,17 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
     useEffect(() => {
         if (!visible || reservation) return;
         if (initialTableId) setSelectedTables([{ id: initialTableId, label: initialTableId }]);
+        const defaultHour = club?.defaultStartHour;
+        if (defaultHour) {
+            const [h, m] = defaultHour.split(':').map(Number);
+            if (!isNaN(h)) {
+                setDate(prev => {
+                    const d = new Date(prev);
+                    d.setHours(h, isNaN(m) ? 0 : m, 0, 0);
+                    return d;
+                });
+            }
+        }
     }, [visible]);
 
     useEffect(() => {

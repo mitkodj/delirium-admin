@@ -42,7 +42,7 @@ export default function Profile() {
     const [nightTimeStart, setNightTimeStart] = useState(club?.nightTimeStart ?? '');
     const [nightTimeEnd, setNightTimeEnd] = useState(club?.nightTimeEnd ?? '');
     const [defaultStartHour, setDefaultStartHour] = useState(club?.defaultStartHour ?? '');
-    const [activeTimePicker, setActiveTimePicker] = useState<'dayStart' | 'dayEnd' | 'nightStart' | 'nightEnd' | null>(null);
+    const [activeTimePicker, setActiveTimePicker] = useState<'dayStart' | 'dayEnd' | 'nightStart' | 'nightEnd' | 'defaultStart' | null>(null);
     const [mapVisible, setMapVisible] = useState(false);
     const [colorPickerVisible, setColorPickerVisible] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -64,9 +64,10 @@ export default function Profile() {
 
     const pickerValue = activeTimePicker
         ? timeToDate(
-            activeTimePicker === 'dayStart' ? dayTimeStart :
-            activeTimePicker === 'dayEnd'   ? dayTimeEnd :
-            activeTimePicker === 'nightStart' ? nightTimeStart : nightTimeEnd
+            activeTimePicker === 'dayStart'     ? dayTimeStart :
+            activeTimePicker === 'dayEnd'       ? dayTimeEnd :
+            activeTimePicker === 'nightStart'   ? nightTimeStart :
+            activeTimePicker === 'nightEnd'     ? nightTimeEnd : defaultStartHour
           )
         : new Date();
 
@@ -74,10 +75,11 @@ export default function Profile() {
         if (Platform.OS === 'android') setActiveTimePicker(null);
         if (!selected) return;
         const t = dateToTime(selected);
-        if (activeTimePicker === 'dayStart')   setDayTimeStart(t);
-        if (activeTimePicker === 'dayEnd')     setDayTimeEnd(t);
-        if (activeTimePicker === 'nightStart') setNightTimeStart(t);
-        if (activeTimePicker === 'nightEnd')   setNightTimeEnd(t);
+        if (activeTimePicker === 'dayStart')     setDayTimeStart(t);
+        if (activeTimePicker === 'dayEnd')       setDayTimeEnd(t);
+        if (activeTimePicker === 'nightStart')   setNightTimeStart(t);
+        if (activeTimePicker === 'nightEnd')     setNightTimeEnd(t);
+        if (activeTimePicker === 'defaultStart') setDefaultStartHour(t);
     };
 
     const pickBanner = async () => {
@@ -305,13 +307,16 @@ export default function Profile() {
 
                 {/* Default start hour */}
                 <Text style={styles.label}>Default start hour <Text style={styles.required}>*</Text></Text>
-                <TextInput
-                    style={styles.input}
-                    value={defaultStartHour}
-                    onChangeText={setDefaultStartHour}
-                    placeholder="e.g. 23:00"
-                    placeholderTextColor={themeConfig.text.muted}
-                />
+                <TouchableOpacity
+                    style={styles.timePill}
+                    onPress={() => setActiveTimePicker('defaultStart')}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="time-outline" size={15} color={themeConfig.accent.primary} />
+                    <Text style={[styles.timePillText, !defaultStartHour && styles.timePillPlaceholder]}>
+                        {defaultStartHour || 'Select time'}
+                    </Text>
+                </TouchableOpacity>
 
             </ScrollView>
 

@@ -156,16 +156,30 @@ export default function Reservations() {
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [currentEvent, setCurrentEvent] = useState<DEvent | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [timeFilter, setTimeFilter] = useState<'day' | 'night' | null>(null);
+
+    const club = (globalThis as any).myClubs?.[0];
 
     const filteredReservations = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
-        if (!q) return reservations;
-        return reservations.filter(r =>
-            r.firstName.toLowerCase().includes(q) ||
-            r.lastName.toLowerCase().includes(q) ||
-            r.comment?.toLowerCase().includes(q)
-        );
-    }, [reservations, searchQuery]);
+        let result = q
+            ? reservations.filter(r =>
+                r.firstName.toLowerCase().includes(q) ||
+                r.lastName.toLowerCase().includes(q) ||
+                r.comment?.toLowerCase().includes(q)
+              )
+            : reservations;
+
+        if (timeFilter) {
+            const timeStr = timeFilter === 'day' ? club?.dayTimeStart : club?.nightTimeStart;
+            const hour = timeStr ? parseInt(timeStr.split(':')[0], 10) : NaN;
+            if (!isNaN(hour)) {
+                result = result.filter(r => new Date(r.reservationDate).getHours() === hour);
+            }
+        }
+
+        return result;
+    }, [reservations, searchQuery, timeFilter]);
     const [collapsedSections, setCollapsedSections] = useState<Set<ReservationStatus>>(
         () => new Set([ReservationStatus.GONE, ReservationStatus.CANCELLED])
     );
@@ -377,17 +391,37 @@ export default function Reservations() {
                                 </View>
                             ))}
                         </View>
-                        <View style={styles.searchRow}>
-                            <Ionicons name="search-outline" size={16} color={themeConfig.text.muted} style={styles.searchIcon} />
-                            <TextInput
-                                style={styles.searchInput}
-                                placeholder="Search by name or comment..."
-                                placeholderTextColor={themeConfig.text.muted}
-                                value={searchQuery}
-                                onChangeText={setSearchQuery}
-                                returnKeyType="search"
-                                clearButtonMode="while-editing"
-                            />
+                        <View style={styles.searchBarRow}>
+                            <View style={[styles.searchRow, styles.searchRowFlex]}>
+                                <Ionicons name="search-outline" size={16} color={themeConfig.text.muted} style={styles.searchIcon} />
+                                <TextInput
+                                    style={styles.searchInput}
+                                    placeholder="Search by name or comment..."
+                                    placeholderTextColor={themeConfig.text.muted}
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    returnKeyType="search"
+                                    clearButtonMode="while-editing"
+                                />
+                            </View>
+                            {club?.dayTimeStart && (
+                                <TouchableOpacity
+                                    style={[styles.timeFilterBtn, timeFilter === 'day' && styles.timeFilterBtnActive]}
+                                    onPress={() => setTimeFilter(f => f === 'day' ? null : 'day')}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons name="sunny-outline" size={20} color={timeFilter === 'day' ? themeConfig.accent.primary : themeConfig.text.muted} />
+                                </TouchableOpacity>
+                            )}
+                            {club?.nightTimeStart && (
+                                <TouchableOpacity
+                                    style={[styles.timeFilterBtn, timeFilter === 'night' && styles.timeFilterBtnActive]}
+                                    onPress={() => setTimeFilter(f => f === 'night' ? null : 'night')}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons name="moon-outline" size={20} color={timeFilter === 'night' ? themeConfig.accent.primary : themeConfig.text.muted} />
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </>
                 }
@@ -703,5 +737,24 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: themeConfig.text.inverse,
+    },
+    timeFilterBtn: {
+        padding: 6,
+        borderRadius: 8,
+    },
+    timeFilterBtnActive: {
+        backgroundColor: 'rgba(234,179,8,0.12)',
+    },
+    searchBarRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginHorizontal: 4,
+        marginBottom: 4,
+    },
+    searchRowFlex: {
+        flex: 1,
+        marginHorizontal: 0,
+        marginBottom: 0,
     },
 });
