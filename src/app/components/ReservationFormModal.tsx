@@ -27,12 +27,13 @@ type SelectedTable = { id: string; label: string };
 type Props = {
     visible: boolean;
     reservation?: Reservation;
+    initialTableId?: string | null;
     tableColorOverrides?: Record<string, string>;
     onClose: () => void;
     onSave: (saved: Reservation) => void;
 };
 
-export default function ReservationFormModal({ visible, reservation, tableColorOverrides, onClose, onSave }: Props) {
+export default function ReservationFormModal({ visible, reservation, initialTableId, tableColorOverrides, onClose, onSave }: Props) {
     const isEdit = !!reservation;
     const club = (globalThis as any).myClubs?.[0];
 
@@ -70,6 +71,11 @@ export default function ReservationFormModal({ visible, reservation, tableColorO
 
     useEffect(() => {
         if (visible && club?.id) loadLayout(club.id);
+    }, [visible]);
+
+    useEffect(() => {
+        if (!visible || reservation) return;
+        if (initialTableId) setSelectedTables([{ id: initialTableId, label: initialTableId }]);
     }, [visible]);
 
     useEffect(() => {

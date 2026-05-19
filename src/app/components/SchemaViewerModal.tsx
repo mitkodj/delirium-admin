@@ -18,6 +18,7 @@ type Props = {
     reservations?: Reservation[];
     onClose: () => void;
     onPressReservation: (reservation: Reservation) => void;
+    onAddReservation?: (tableId: string) => void;
 };
 
 export default function SchemaViewerModal({
@@ -26,6 +27,7 @@ export default function SchemaViewerModal({
     reservations,
     onClose,
     onPressReservation,
+    onAddReservation,
 }: Props) {
     const clubId = (globalThis as any).myClubs?.[0]?.id;
     const { floors, layoutLoading, loadLayout } = useClubData();
@@ -68,20 +70,25 @@ export default function SchemaViewerModal({
                     </TouchableOpacity>
                 </View>
 
-                {/* Reservation preview */}
-                {matched && (
+                {/* Reservation preview / add placeholder */}
+                {selectedTableId && (
                     <View style={styles.reservationPreview}>
-                        <ReservationRow
-                            item={matched}
-                            onPress={() => {
-                                onClose();
-                                onPressReservation(matched);
-                            }}
-                            onEdit={() => {
-                                onClose();
-                                onPressReservation(matched);
-                            }}
-                        />
+                        {matched ? (
+                            <ReservationRow
+                                item={matched}
+                                onPress={() => { onClose(); onPressReservation(matched); }}
+                                onEdit={() => { onClose(); onPressReservation(matched); }}
+                            />
+                        ) : (
+                            <TouchableOpacity
+                                style={styles.addRow}
+                                onPress={() => { onClose(); onAddReservation?.(selectedTableId); }}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.addRowText}>Add reservation</Text>
+                                <Ionicons name="add-circle-outline" size={20} color={themeConfig.accent.primary} />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
 
@@ -224,5 +231,21 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 15,
         color: themeConfig.text.muted,
+    },
+    addRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 14,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: themeConfig.border.subtle,
+        backgroundColor: themeConfig.background.secondary,
+    },
+    addRowText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: themeConfig.accent.primary,
     },
 });

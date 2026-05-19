@@ -146,6 +146,7 @@ export default function Reservations() {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
+    const [preselectedTableId, setPreselectedTableId] = useState<string | null>(null);
     const [detailReservation, setDetailReservation] = useState<Reservation | null>(null);
     const [detailVisible, setDetailVisible] = useState(false);
     const [schemaVisible, setSchemaVisible] = useState(false);
@@ -285,6 +286,7 @@ export default function Reservations() {
     const closeModal = () => {
         setModalVisible(false);
         setEditingReservation(null);
+        setPreselectedTableId(null);
     };
 
     const updateStatus = async (item: Reservation, status: ReservationStatus) => {
@@ -424,6 +426,7 @@ export default function Reservations() {
             <ReservationFormModal
                 visible={modalVisible}
                 reservation={editingReservation ?? undefined}
+                initialTableId={preselectedTableId}
                 tableColorOverrides={tableColorOverrides}
                 onClose={closeModal}
                 onSave={handleSave}
@@ -437,6 +440,11 @@ export default function Reservations() {
                 onPressReservation={(r) => {
                     setSchemaVisible(false);
                     openDetail(r);
+                }}
+                onAddReservation={(tableId) => {
+                    setPreselectedTableId(tableId);
+                    setSchemaVisible(false);
+                    setModalVisible(true);
                 }}
             />
 
