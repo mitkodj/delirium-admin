@@ -226,7 +226,6 @@ export const login = async (email: string, password: string) => {
       password
     });
 
-    console.log('login response', res, res.data);
     return res.data as { accessToken: string; refreshToken: string; expiresIn: number };
   } catch (e) {
     console.log('login error', e, JSON.stringify(e));
@@ -258,18 +257,30 @@ export const setEventsGenres = async (eventId: string, genres: string[]) => {
   }
 };
 
+const authHeader = () => ({ Authorization: `Bearer ${(globalThis as any).authToken}` });
+
 export const getLayout = async (discoId: string) => {
   try {
-    return await axios.get(`${partyService}/api/layouts/${discoId}`);
+    return await axios.get(`${partyService}/api/layouts/${discoId}`, { headers: authHeader() });
   } catch (e) {
     console.log('getLayout error', e);
     return null;
   }
 };
 
-export const postLayout = async (discoId: string, schema: any[]) => {
+export const postLayout = async (discoId: string, schema: any[], date?: Date | null, isDefault?: boolean) => {
+  const body: Record<string, any> = { schema };
+  if (isDefault) {
+    body.isDefault = true;
+  } else if (date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    body.date = `${y}-${m}-${d}`;
+    body.isDefault = false;
+  }
   try {
-    return await axios.post(`${partyService}/api/layouts/${discoId}`, { schema });
+    return await axios.put(`${partyService}/api/layouts/${discoId}/${discoId}`, body, { headers: authHeader() });
   } catch (e) {
     console.log('postLayout error', e);
     return null;
@@ -278,7 +289,7 @@ export const postLayout = async (discoId: string, schema: any[]) => {
 
 export const updateReservation = async (id: string, reservation: CreateReservationPayload) => {
   try {
-    return await axios.put(`${partyService}/api/reservations/${id}`, reservation);
+    return await axios.put(`${partyService}/api/reservations/${id}`, reservation, { headers: authHeader() });
   } catch (e) {
     console.log('updateReservation error', e);
     return null;
@@ -293,9 +304,8 @@ export const getReservations = async (date: Date, discoId: string) => {
     const dateStr = `${y}-${m}-${d}`;
     console.log(`ReservationDate eq ${dateStr} and DiscoId eq ${discoId}`);
     return await axios.get(`${partyService}/api/reservations`, {
-      params: {
-        '$filter': `ReservationDate eq ${dateStr} and DiscoId eq ${discoId}`,
-      },
+      params: { '$filter': `ReservationDate eq ${dateStr} and DiscoId eq ${discoId}` },
+      headers: authHeader(),
     });
   } catch (e) {
     console.log('getReservations error', e);
@@ -341,7 +351,7 @@ export const fetchEventsForDate = async (date: Date, discoId: string) => {
 
 export const createReservation = async (payload: CreateReservationPayload) => {
   try {
-    return await axios.post(`${partyService}/api/reservations`, payload);
+    return await axios.post(`${partyService}/api/reservations`, payload, { headers: authHeader() });
   } catch (e) {
     console.log('createReservation error', e);
     return null;

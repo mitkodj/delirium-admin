@@ -216,7 +216,7 @@ export default function HostPanel() {
   const saveLayout = async () => {
     if (clubId) {
       try {
-        await postLayout(clubId, floors);
+        await postLayout(clubId, floors, editDate, !editDate);
       } catch (e) {
         console.error('Failed to save layout', e);
       }
