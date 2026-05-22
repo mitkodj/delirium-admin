@@ -39,10 +39,6 @@ export const fetchClubs = async (filters: WizardState) => {
   );
 
   try {
-    console.log(buildODataQuery({
-        filter,
-        orderBy: "Name asc"
-      }));
     return await axios.get(`${partyService}/api/clubs`, {
       params: buildODataQuery({
         filter,
@@ -203,6 +199,7 @@ export type UpdateClubPayload = {
 
 export const updateClub = async (id: string, payload: UpdateClubPayload) => {
   try {
+    console.log((globalThis as any).authToken);
     return await axios.put(`${partyService}/api/discos/${id}`, payload);
   } catch (e) {
     console.log('updateClub error', e);
@@ -210,9 +207,13 @@ export const updateClub = async (id: string, payload: UpdateClubPayload) => {
   }
 };
 
-export const updateEvent = async (id: string, event: Partial<DEvent>) => {
+export const updateEvent = async (id: string, event: Partial<DEvent>, token: string) => {
   try {
-    return await axios.put(`${partyService}/api/events/${id}`, event);
+    return await axios.put(`${partyService}/api/events/${id}`, event, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
   } catch (e) {
     console.log('updateEvent error', e);
     return null;

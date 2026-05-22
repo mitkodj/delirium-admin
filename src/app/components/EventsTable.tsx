@@ -36,7 +36,7 @@ export default function EventsTable({
         },
         {
             title: 'Date',
-            render: (item: DEvent) => formatEventDate(item.date as Date),
+            render: (item: DEvent) => formatEventDate(item.startDate as Date),
         },
         {
             title: '',
