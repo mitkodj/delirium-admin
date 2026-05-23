@@ -199,7 +199,6 @@ export type UpdateClubPayload = {
 
 export const updateClub = async (id: string, payload: UpdateClubPayload) => {
   try {
-    console.log((globalThis as any).authToken);
     return await axios.put(`${partyService}/api/discos/${id}`, payload);
   } catch (e) {
     console.log('updateClub error', e);
@@ -207,13 +206,9 @@ export const updateClub = async (id: string, payload: UpdateClubPayload) => {
   }
 };
 
-export const updateEvent = async (id: string, event: Partial<DEvent>, token: string) => {
+export const updateEvent = async (id: string, event: Partial<DEvent>) => {
   try {
-    return await axios.put(`${partyService}/api/events/${id}`, event, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    return await axios.put(`${partyService}/api/events/${id}`, event);
   } catch (e) {
     console.log('updateEvent error', e);
     return null;

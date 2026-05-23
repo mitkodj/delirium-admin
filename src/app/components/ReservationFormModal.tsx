@@ -15,7 +15,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import themeConfig from '../../themes/themeConfig';
 import { createReservation, updateReservation, CreateReservationPayload } from '../../utils/service';
-import { TIME_PRESETS } from '../../utils/constants';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import TableSelectorModal from './TableSelectorModal';
@@ -116,11 +115,17 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         if (Platform.OS === 'android') setShowDatePicker(false);
     };
 
-    const applyTimePreset = (hour: number) => {
+    const applyTimePreset = (timeStr: string) => {
+        const [h, m] = timeStr.split(':').map(Number);
         const merged = new Date(date);
-        merged.setHours(hour, 0, 0, 0);
+        merged.setHours(h, isNaN(m) ? 0 : m, 0, 0);
         setDate(merged);
     };
+
+    const timePresets: { label: string; time: string | null }[] = [
+        { label: 'Daytime',   time: club?.dayTimeStart   ?? null },
+        { label: 'Nighttime', time: club?.nightTimeStart ?? null },
+    ];
 
     const mergeTime = (_: any, selected?: Date) => {
         if (selected) {
@@ -244,17 +249,20 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
 
                     {/* Time presets */}
                     <View style={styles.row}>
-                        {TIME_PRESETS.map(({ label, hour }, i) => {
-                            const active = date.getHours() === hour && date.getMinutes() === 0;
+                        {timePresets.map(({ label, time }, i) => {
+                            const [ph, pm] = time ? time.split(':').map(Number) : [NaN, NaN];
+                            const active = !isNaN(ph) && date.getHours() === ph && date.getMinutes() === (isNaN(pm) ? 0 : pm);
+                            const disabled = !time;
                             return (
                                 <React.Fragment key={label}>
                                     {i > 0 && <View style={styles.rowGap} />}
                                     <TouchableOpacity
-                                        style={[styles.presetBtn, styles.flex1, active && styles.presetBtnActive]}
-                                        onPress={() => applyTimePreset(hour)}
-                                        activeOpacity={0.7}
+                                        style={[styles.presetBtn, styles.flex1, active && styles.presetBtnActive, disabled && styles.presetBtnDisabled]}
+                                        onPress={() => time && applyTimePreset(time)}
+                                        activeOpacity={disabled ? 1 : 0.7}
+                                        disabled={disabled}
                                     >
-                                        <Text style={[styles.presetBtnText, active && styles.presetBtnTextActive]}>{label}</Text>
+                                        <Text style={[styles.presetBtnText, active && styles.presetBtnTextActive, disabled && styles.presetBtnTextDisabled]}>{label}</Text>
                                     </TouchableOpacity>
                                 </React.Fragment>
                             );
@@ -570,6 +578,12 @@ const styles = StyleSheet.create({
     },
     presetBtnTextActive: {
         color: themeConfig.accent.primary,
+    },
+    presetBtnDisabled: {
+        opacity: 0.35,
+    },
+    presetBtnTextDisabled: {
+        color: themeConfig.text.muted,
     },
     actions: {
         flexDirection: 'row',
