@@ -343,7 +343,6 @@ export default function Reservations() {
         weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
     });
 
-    console.log(currentEvent?.banner, buildAssetUrl(currentEvent?.banner as string));
     return (
         <View style={[adminStyles.adminPage, styles.container]}>
             <Stack.Screen

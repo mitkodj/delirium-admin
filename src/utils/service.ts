@@ -298,7 +298,6 @@ export const getReservations = async (date: Date, discoId: string) => {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
-    console.log(`ReservationDate eq ${dateStr} and DiscoId eq ${discoId}`);
     return await axios.get(`${partyService}/api/reservations`, {
       params: { '$filter': `ReservationDate eq ${dateStr} and DiscoId eq ${discoId}` },
       headers: authHeader(),
