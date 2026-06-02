@@ -229,6 +229,14 @@ export const login = async (email: string, password: string) => {
   }
 };
 
+export const logout = async () => {
+  try {
+    await axios.post(`${partyService}/api/auth/logout`, {}, { headers: authHeader() });
+  } catch (e) {
+    console.log('logout error', e);
+  }
+};
+
 export const getMyClubs = async (token: string) => {
   try {
     const res = await axios.get(`${partyService}/api/discos/my-discos`, {
@@ -264,7 +272,7 @@ export const getLayout = async (discoId: string) => {
   }
 };
 
-export const postLayout = async (discoId: string, schema: any[], date?: Date | null, isDefault?: boolean) => {
+export const postLayout = async (discoId: string, layoutId: string, schema: any[], date?: Date | null, isDefault?: boolean) => {
   const body: Record<string, any> = { schema };
   if (isDefault) {
     body.isDefault = true;
@@ -276,7 +284,7 @@ export const postLayout = async (discoId: string, schema: any[], date?: Date | n
     body.isDefault = false;
   }
   try {
-    return await axios.put(`${partyService}/api/layouts/${discoId}/${discoId}`, body, { headers: authHeader() });
+    return await axios.put(`${partyService}/api/layouts/${discoId}/${layoutId}`, body, { headers: authHeader() });
   } catch (e) {
     console.log('postLayout error', e);
     return null;

@@ -28,7 +28,7 @@ const DEFAULT_CAPACITY: Partial<Record<FloorObjectType, number>> = {
 };
 
 export default function HostPanel() {
-  const { floors, setFloors, layoutLoading: loading, loadLayout } = useClubData();
+  const { floors, setFloors, layoutId, layoutLoading: loading, loadLayout } = useClubData();
   const [mode, setMode] = useState<Mode>('preview');
   const [activeFloorId, setActiveFloorId] = useState<string>();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -216,7 +216,7 @@ export default function HostPanel() {
   const saveLayout = async () => {
     if (clubId) {
       try {
-        await postLayout(clubId, floors, editDate, !editDate);
+        await postLayout(clubId, layoutId ?? '', floors, editDate, !editDate);
       } catch (e) {
         console.error('Failed to save layout', e);
       }
