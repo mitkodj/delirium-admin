@@ -9,6 +9,7 @@ import AdminHeader from '../components/AdminHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SidebarProvider, useSidebar } from '../../providers/SidebarContext';
 import { ClubDataProvider } from '../../providers/ClubDataContext';
+import { logout } from '../../utils/service';
 
 
 const ROUTE_TITLE_MAP: any = {
@@ -92,7 +93,11 @@ function DashboardContent() {
             <SidebarIcon
               icon="exit-outline"
               active={false}
-              onPress={() => router.replace('/')}
+              onPress={async () => {
+                await logout();
+                (globalThis as any).authToken = null;
+                router.replace('/');
+              }}
             />
           </View>
 
