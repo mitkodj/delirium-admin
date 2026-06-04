@@ -300,6 +300,24 @@ export const updateReservation = async (id: string, reservation: CreateReservati
   }
 };
 
+export type ReservationContact = {
+  firstName: string;
+  lastName: string;
+  phoneNumber: string;
+};
+
+export const fetchContactsByPhone = async (phone: string): Promise<ReservationContact[]> => {
+  try {
+    const res = await axios.get(`${partyService}/api/reservations/contacts`, {
+      params: { phone },
+      headers: authHeader(),
+    });
+    return res.data ?? [];
+  } catch (e) {
+    return [];
+  }
+};
+
 export const getReservations = async (date: Date, discoId: string) => {
   try {
     const y = date.getFullYear();

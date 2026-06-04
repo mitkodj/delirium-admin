@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Modal,
     View,
@@ -14,7 +14,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import themeConfig from '../../themes/themeConfig';
-import { createReservation, updateReservation, CreateReservationPayload } from '../../utils/service';
+import { createReservation, updateReservation, fetchContactsByPhone, CreateReservationPayload, ReservationContact } from '../../utils/service';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import TableSelectorModal from './TableSelectorModal';
@@ -58,6 +58,9 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
     const [showTableSelector, setShowTableSelector] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [contactSuggestions, setContactSuggestions] = useState<ReservationContact[]>([]);
+    const [selectedSuggestionPhone, setSelectedSuggestionPhone] = useState<string | null>(null);
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const phoneValid = phone.length === 0 || PHONE_RE.test(phone);
     const allObjects = floors.flatMap(f => f.objects);
@@ -99,6 +102,17 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         setSelectedTables(reservation.tables?.map(id => ({ id, label: id })) ?? []);
         setStatus(reservation.status ?? ReservationStatus.OPEN);
     }, [visible, reservation]);
+
+    useEffect(() => {
+        setContactSuggestions([]);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        if (!visible || !phone || phone.replace(/\D/g, '').length < 7) return;
+        debounceTimer.current = setTimeout(async () => {
+            const contacts = await fetchContactsByPhone(phone);
+            setContactSuggestions(contacts);
+        }, 600);
+        return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
+    }, [phone, visible]);
 
     const formatDate = (d: Date) =>
         d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -206,6 +220,8 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         setComment('');
         setStatus(ReservationStatus.OPEN);
         setError(null);
+        setContactSuggestions([]);
+        setSelectedSuggestionPhone(null);
     };
 
     const handleClose = () => {
@@ -213,7 +229,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         onClose();
     };
 
-
+    console.log(contactSuggestions);
     return (
         <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
             <View style={styles.container}>
@@ -360,6 +376,36 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
                         maxLength={512}
                         textAlignVertical="top"
                     />
+
+                    {/* Contact suggestions list */}
+                    {contactSuggestions.length > 0 && (
+                        <View style={styles.suggestionsContainer}>
+                            <Text style={styles.suggestionsHeader}>Suggestions based on phone:</Text>
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                {contactSuggestions.map((c, i) => {
+                                    const isSelected = firstName === c.firstName && lastName === c.lastName;
+                                    return (
+                                        <TouchableOpacity
+                                            key={i}
+                                            style={[styles.suggestionItem, isSelected && styles.suggestionItemSelected]}
+                                            onPress={() => {
+                                                setFirstName(c.firstName);
+                                                setLastName(c.lastName);
+                                                setSelectedSuggestionPhone(c.phoneNumber);
+                                            }}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Ionicons name="person-outline" size={16} color={isSelected ? themeConfig.accent.primary : themeConfig.text.muted} />
+                                            <Text style={[styles.suggestionItemText, isSelected && styles.suggestionItemTextSelected]}>{c.firstName} {c.lastName}</Text>
+                                            {isSelected && (
+                                                <Ionicons name="checkmark-circle" size={18} color={themeConfig.accent.primary} style={styles.suggestionCheckmark} />
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
+                    )}
 
                 </ScrollView>
 
@@ -584,6 +630,47 @@ const styles = StyleSheet.create({
     },
     presetBtnTextDisabled: {
         color: themeConfig.text.muted,
+    },
+    suggestionsContainer: {
+        flex: 1,
+        borderTopWidth: 1,
+        borderTopColor: themeConfig.border.subtle,
+        paddingTop: 10,
+        marginTop: 4,
+    },
+    suggestionsHeader: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: themeConfig.text.muted,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        marginBottom: 6,
+    },
+    suggestionItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        marginBottom: 4,
+        backgroundColor: themeConfig.background.secondary,
+    },
+    suggestionItemSelected: {
+        borderWidth: 1,
+        borderColor: themeConfig.accent.primary,
+    },
+    suggestionItemText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '600',
+        color: themeConfig.text.primary,
+    },
+    suggestionItemTextSelected: {
+        color: themeConfig.accent.primary,
+    },
+    suggestionCheckmark: {
+        marginLeft: 'auto',
     },
     actions: {
         flexDirection: 'row',
