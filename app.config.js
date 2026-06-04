@@ -12,8 +12,11 @@ export default {
 
     scheme: "com.radmit.deliriumadmin",
 
+    icon: "./logo-ios.png",
+
     ios: {
       bundleIdentifier: "com.radmit.deliriumadmin",
+      icon: "./logo-ios.png",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIViewControllerBasedStatusBarAppearance: true,

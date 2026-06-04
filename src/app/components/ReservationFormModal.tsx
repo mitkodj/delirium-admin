@@ -108,7 +108,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         if (!visible || !phone || phone.replace(/\D/g, '').length < 7) return;
         debounceTimer.current = setTimeout(async () => {
-            const contacts = await fetchContactsByPhone(phone);
+            const contacts = await fetchContactsByPhone(club?.id, phone);
             setContactSuggestions(contacts);
         }, 600);
         return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
@@ -177,10 +177,10 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
 
             let saved: Reservation;
             if (isEdit) {
-                await updateReservation(reservation!.id, payload);
+                await updateReservation(club?.id, reservation!.id, payload);
                 saved = { ...reservation!, ...payload };
             } else {
-                const res = await createReservation(payload);
+                const res = await createReservation(club?.id, payload);
                 saved = res?.data ?? { ...payload, id: String(Date.now()) };
             }
 
@@ -229,7 +229,6 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         onClose();
     };
 
-    console.log(contactSuggestions);
     return (
         <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
             <View style={styles.container}>
@@ -395,11 +394,29 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
                                             }}
                                             activeOpacity={0.7}
                                         >
-                                            <Ionicons name="person-outline" size={16} color={isSelected ? themeConfig.accent.primary : themeConfig.text.muted} />
-                                            <Text style={[styles.suggestionItemText, isSelected && styles.suggestionItemTextSelected]}>{c.firstName} {c.lastName}</Text>
-                                            {isSelected && (
-                                                <Ionicons name="checkmark-circle" size={18} color={themeConfig.accent.primary} style={styles.suggestionCheckmark} />
-                                            )}
+                                            <View style={styles.suggestionItemContent}>
+                                                <View style={styles.suggestionItemRow}>
+                                                    <Ionicons name="person-outline" size={16} color={isSelected ? themeConfig.accent.primary : themeConfig.text.muted} />
+                                                    <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.suggestionItemText, isSelected && styles.suggestionItemTextSelected]}>{c.firstName} {c.lastName}</Text>
+                                                    {c.reservationDate && (
+                                                        <View style={styles.suggestionDateInline}>
+                                                            <Ionicons name="calendar-outline" size={11} color={themeConfig.text.muted} />
+                                                            <Text style={styles.suggestionDateText}>
+                                                                {new Date(c.reservationDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+                                                    {isSelected && (
+                                                        <Ionicons name="checkmark-circle" size={18} color={themeConfig.accent.primary} />
+                                                    )}
+                                                </View>
+                                                {c.comment && (
+                                                    <View style={styles.suggestionMetaRow}>
+                                                        <Ionicons name="chatbubble-outline" size={12} color={themeConfig.text.muted} />
+                                                        <Text style={styles.suggestionMetaText} numberOfLines={1}>{c.comment}</Text>
+                                                    </View>
+                                                )}
+                                            </View>
                                         </TouchableOpacity>
                                     );
                                 })}
@@ -647,10 +664,7 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     suggestionItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        paddingVertical: 12,
+        paddingVertical: 10,
         paddingHorizontal: 10,
         borderRadius: 10,
         marginBottom: 4,
@@ -659,6 +673,15 @@ const styles = StyleSheet.create({
     suggestionItemSelected: {
         borderWidth: 1,
         borderColor: themeConfig.accent.primary,
+    },
+    suggestionItemContent: {
+        flex: 1,
+        gap: 4,
+    },
+    suggestionItemRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
     },
     suggestionItemText: {
         flex: 1,
@@ -671,6 +694,28 @@ const styles = StyleSheet.create({
     },
     suggestionCheckmark: {
         marginLeft: 'auto',
+    },
+    suggestionDateInline: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
+        marginLeft: 'auto',
+    },
+    suggestionDateText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: themeConfig.text.muted,
+    },
+    suggestionMetaRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        paddingTop: 6,
+    },
+    suggestionMetaText: {
+        fontSize: 12,
+        color: themeConfig.text.muted,
+        flex: 1,
     },
     actions: {
         flexDirection: 'row',

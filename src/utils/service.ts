@@ -291,9 +291,9 @@ export const postLayout = async (discoId: string, layoutId: string, schema: any[
   }
 };
 
-export const updateReservation = async (id: string, reservation: CreateReservationPayload) => {
+export const updateReservation = async (discoId: string, id: string, reservation: CreateReservationPayload) => {
   try {
-    return await axios.put(`${partyService}/api/reservations/${id}`, reservation, { headers: authHeader() });
+    return await axios.put(`${partyService}/api/discos/${discoId}/reservations/${id}`, reservation, { headers: authHeader() });
   } catch (e) {
     console.log('updateReservation error', e);
     return null;
@@ -304,11 +304,14 @@ export type ReservationContact = {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  reservationDate?: string;
+  comment?: string;
+  clientsCount?: number;
 };
 
-export const fetchContactsByPhone = async (phone: string): Promise<ReservationContact[]> => {
+export const fetchContactsByPhone = async (discoId: string, phone: string): Promise<ReservationContact[]> => {
   try {
-    const res = await axios.get(`${partyService}/api/reservations/contacts`, {
+    const res = await axios.get(`${partyService}/api/discos/${discoId}/reservations/contacts`, {
       params: { phone },
       headers: authHeader(),
     });
@@ -324,8 +327,8 @@ export const getReservations = async (date: Date, discoId: string) => {
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
     const dateStr = `${y}-${m}-${d}`;
-    return await axios.get(`${partyService}/api/reservations`, {
-      params: { '$filter': `ReservationDate eq ${dateStr} and DiscoId eq ${discoId}` },
+    return await axios.get(`${partyService}/api/discos/${discoId}/reservations`, {
+      params: { '$filter': `ReservationDate eq ${dateStr}` },
       headers: authHeader(),
     });
   } catch (e) {
@@ -370,9 +373,9 @@ export const fetchEventsForDate = async (date: Date, discoId: string) => {
   // }
 };
 
-export const createReservation = async (payload: CreateReservationPayload) => {
+export const createReservation = async (discoId: string, payload: CreateReservationPayload) => {
   try {
-    return await axios.post(`${partyService}/api/reservations`, payload, { headers: authHeader() });
+    return await axios.post(`${partyService}/api/discos/${discoId}/reservations`, payload, { headers: authHeader() });
   } catch (e) {
     console.log('createReservation error', e);
     return null;

@@ -163,12 +163,12 @@ export default function Reservations() {
     const filteredReservations = useMemo(() => {
         const q = searchQuery.trim().toLowerCase();
         let result = q
-            ? reservations.filter(r =>
+            ? reservations?.filter(r =>
                 r.firstName.toLowerCase().includes(q) ||
                 r.lastName.toLowerCase().includes(q) ||
                 r.comment?.toLowerCase().includes(q)
               )
-            : reservations;
+            : (reservations ?? []);
 
         if (timeFilter) {
             const timeStr = timeFilter === 'day' ? club?.dayTimeStart : club?.nightTimeStart;
@@ -305,7 +305,7 @@ export default function Reservations() {
 
     const updateStatus = async (item: Reservation, status: ReservationStatus) => {
         const clubId = (globalThis as any).myClubs?.[0]?.id;
-        await updateReservation(item.id, {
+        await updateReservation(clubId, item.id, {
             discoId: clubId,
             firstName: item.firstName,
             lastName: item.lastName,
@@ -325,6 +325,26 @@ export default function Reservations() {
     const handleSeat    = (item: Reservation) => updateStatus(item, ReservationStatus.SEATED);
     const handleGone    = (item: Reservation) => updateStatus(item, ReservationStatus.GONE);
     const handleCancel    = (item: Reservation) => updateStatus(item, ReservationStatus.CANCELLED);
+
+    const handleMoveTable = async (fromId: string, toId: string) => {
+        if (!detailReservation) return;
+        const clubId = (globalThis as any).myClubs?.[0]?.id;
+        const newTables = (detailReservation.tables ?? []).map(id => id === fromId ? toId : id);
+        await updateReservation(clubId, detailReservation.id, {
+            discoId: clubId,
+            firstName: detailReservation.firstName,
+            lastName: detailReservation.lastName,
+            reservationDate: detailReservation.reservationDate,
+            tables: newTables,
+            phoneNumber: detailReservation.phoneNumber,
+            comment: detailReservation.comment,
+            clientsCount: detailReservation.clientsCount ?? 1,
+            status: detailReservation.status ?? ReservationStatus.OPEN,
+        });
+        const updated = { ...detailReservation, tables: newTables };
+        setReservations(prev => prev.map(r => r.id === detailReservation.id ? updated : r));
+        setDetailReservation(updated);
+    };
 
     const handleSave = (saved: Reservation) => {
         setReservations(prev =>
@@ -454,6 +474,7 @@ export default function Reservations() {
                 onGone={() => detailReservation && handleGone(detailReservation)}
                 onCancel={() => detailReservation && handleCancel(detailReservation)}
                 onUpdateStatus={(status) => detailReservation && updateStatus(detailReservation, status)}
+                onMoveTable={handleMoveTable}
             />
 
             <ReservationFormModal

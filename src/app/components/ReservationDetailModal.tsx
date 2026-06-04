@@ -10,6 +10,7 @@ import { Reservation, ReservationStatus } from '../../types/Disco';
 import { useClubData } from '../../providers/ClubDataContext';
 import FloorCanvas from './floorMap/FloorCanvas';
 import { ReservationRow } from './ReservationRow';
+import { FloorObject } from '../../types/FloorMap';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -60,6 +61,7 @@ type Props = {
     onGone: () => void;
     onCancel: () => void;
     onUpdateStatus: (status: ReservationStatus) => void;
+    onMoveTable?: (fromId: string, toId: string) => void;
 };
 
 export default function ReservationDetailModal({
@@ -73,6 +75,7 @@ export default function ReservationDetailModal({
     onGone,
     onCancel,
     onUpdateStatus,
+    onMoveTable,
 }: Props) {
     const { floors } = useClubData();
     const insets = useSafeAreaInsets();
@@ -84,6 +87,28 @@ export default function ReservationDetailModal({
     const [showStatusPanel, setShowStatusPanel] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState<ReservationStatus>(ReservationStatus.OPEN);
     const [highlightedTableId, setHighlightedTableId] = useState<string | null>(null);
+
+    // Drag-to-reassign state
+    const [dragCirclePos, setDragCirclePos] = useState<{ x: number; y: number } | null>(null);
+    const [draggingFromId, setDraggingFromId] = useState<string | null>(null);
+    const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+
+    const canvasWrapperRef = useRef<View | null>(null);
+    const wrapperPagePos = useRef({ x: 0, y: 0 });
+    const isDraggingRef = useRef(false);
+    const dragFromIdRef = useRef<string | null>(null);
+    const dropTargetIdRef = useRef<string | null>(null);
+    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Updated each render so PanResponder callbacks see fresh values
+    const ownTableIdsRef = useRef<string[]>([]);
+    const tableColorOverridesRef = useRef<Record<string, string>>({});
+    const tableFloorObjectsRef = useRef<FloorObject[]>([]);
+    const scaleRef = useRef(1);
+    const containerWRef = useRef(0);
+    const containerHRef = useRef(0);
+    const canvasWRef = useRef(CANVAS_W);
+    const canvasHRef = useRef(CANVAS_H);
+    const onMoveTableRef = useRef(onMoveTable);
 
     const onCloseRef = useRef(onClose);
     onCloseRef.current = onClose;
@@ -101,6 +126,91 @@ export default function ReservationDetailModal({
             } else {
                 Animated.spring(translateY, { toValue: 0, useNativeDriver: true, damping: 20, stiffness: 300 } as any).start();
             }
+        },
+    })).current;
+
+    const tableDragPan = useRef(PanResponder.create({
+        // Capture phase: claim touch before FloorItem Pressable when hitting a reservation table
+        onStartShouldSetPanResponderCapture: e => {
+            const { pageX, pageY } = e.nativeEvent;
+            const s = scaleRef.current;
+            const cx = (pageX - wrapperPagePos.current.x - containerWRef.current / 2) / s + canvasWRef.current / 2;
+            const cy = (pageY - wrapperPagePos.current.y - containerHRef.current / 2) / s + canvasHRef.current / 2;
+            const hit = tableFloorObjectsRef.current.find(
+                o => cx >= o.x && cx <= o.x + o.width && cy >= o.y && cy <= o.y + o.height,
+            );
+            return !!(hit && ownTableIdsRef.current.includes(hit.id));
+        },
+        onPanResponderGrant: e => {
+            const { pageX, pageY } = e.nativeEvent;
+            const s = scaleRef.current;
+            const cx = (pageX - wrapperPagePos.current.x - containerWRef.current / 2) / s + canvasWRef.current / 2;
+            const cy = (pageY - wrapperPagePos.current.y - containerHRef.current / 2) / s + canvasHRef.current / 2;
+            const hit = tableFloorObjectsRef.current.find(
+                o => cx >= o.x && cx <= o.x + o.width && cy >= o.y && cy <= o.y + o.height,
+            );
+            if (!hit) return;
+            dragFromIdRef.current = hit.id;
+            longPressTimerRef.current = setTimeout(() => {
+                isDraggingRef.current = true;
+                setDraggingFromId(hit.id);
+                setDragCirclePos({ x: pageX, y: pageY });
+            }, 420);
+        },
+        onPanResponderMove: (e, gs) => {
+            if (!isDraggingRef.current) {
+                if ((Math.abs(gs.dx) > 8 || Math.abs(gs.dy) > 8) && longPressTimerRef.current) {
+                    clearTimeout(longPressTimerRef.current);
+                    longPressTimerRef.current = null;
+                }
+                return;
+            }
+            const { pageX, pageY } = e.nativeEvent;
+            setDragCirclePos({ x: pageX, y: pageY });
+            const s = scaleRef.current;
+            const cx = (pageX - wrapperPagePos.current.x - containerWRef.current / 2) / s + canvasWRef.current / 2;
+            const cy = (pageY - wrapperPagePos.current.y - containerHRef.current / 2) / s + canvasHRef.current / 2;
+            const hit = tableFloorObjectsRef.current.find(
+                o => cx >= o.x && cx <= o.x + o.width && cy >= o.y && cy <= o.y + o.height,
+            );
+            const available = hit &&
+                !ownTableIdsRef.current.includes(hit.id) &&
+                !tableColorOverridesRef.current[hit.id];
+            const newTarget = available ? hit!.id : null;
+            if (newTarget !== dropTargetIdRef.current) {
+                dropTargetIdRef.current = newTarget;
+                setDropTargetId(newTarget);
+            }
+        },
+        onPanResponderRelease: () => {
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+            if (isDraggingRef.current && dragFromIdRef.current && dropTargetIdRef.current) {
+                onMoveTableRef.current?.(dragFromIdRef.current, dropTargetIdRef.current);
+            } else if (!isDraggingRef.current && dragFromIdRef.current) {
+                // Short tap on own table: toggle highlight
+                setHighlightedTableId(prev => prev === dragFromIdRef.current ? null : dragFromIdRef.current);
+            }
+            isDraggingRef.current = false;
+            dragFromIdRef.current = null;
+            dropTargetIdRef.current = null;
+            setDragCirclePos(null);
+            setDraggingFromId(null);
+            setDropTargetId(null);
+        },
+        onPanResponderTerminate: () => {
+            if (longPressTimerRef.current) {
+                clearTimeout(longPressTimerRef.current);
+                longPressTimerRef.current = null;
+            }
+            isDraggingRef.current = false;
+            dragFromIdRef.current = null;
+            dropTargetIdRef.current = null;
+            setDragCirclePos(null);
+            setDraggingFromId(null);
+            setDropTargetId(null);
         },
     })).current;
 
@@ -145,10 +255,24 @@ export default function ReservationDetailModal({
     const DETAIL_PULSE_COLOR = '#eab308';
     const ownTableIds = reservation?.tables ?? [];
     const isApproved = reservation?.status === ReservationStatus.APPROVED;
+
+    // Keep refs fresh for the stable PanResponder closures
+    ownTableIdsRef.current = ownTableIds;
+    tableColorOverridesRef.current = tableColorOverrides;
+    tableFloorObjectsRef.current = tableFloor?.objects ?? [];
+    scaleRef.current = scale;
+    containerWRef.current = containerW;
+    containerHRef.current = containerH;
+    canvasWRef.current = canvasW;
+    canvasHRef.current = canvasH;
+    onMoveTableRef.current = onMoveTable;
+
     const detailColorOverrides: Record<string, string> = {
         ...tableColorOverrides,
         ...(isApproved ? Object.fromEntries(ownTableIds.map(id => [id, DETAIL_PULSE_COLOR])) : {}),
         ...(highlightedTableId ? { [highlightedTableId]: DETAIL_PULSE_COLOR } : {}),
+        ...(draggingFromId ? { [draggingFromId]: '#7c6ff0' } : {}),
+        ...(dropTargetId ? { [dropTargetId]: '#22c55e' } : {}),
     };
     const allPulsingIds = highlightedTableId && !ownTableIds.includes(highlightedTableId)
         ? [...ownTableIds, highlightedTableId]
@@ -218,10 +342,17 @@ export default function ReservationDetailModal({
 
                     {/* Floor canvas */}
                     <View
+                        ref={canvasWrapperRef}
                         style={styles.canvasWrapper}
+                        {...tableDragPan.panHandlers}
                         onLayout={e => {
                             setContainerW(e.nativeEvent.layout.width);
                             setContainerH(e.nativeEvent.layout.height);
+                            setTimeout(() => {
+                                canvasWrapperRef.current?.measure((_, __, ___, ____, px, py) => {
+                                    wrapperPagePos.current = { x: px, y: py };
+                                });
+                            }, 50);
                         }}
                     >
                         {tableFloor && containerW > 0 && containerH > 0 && (
@@ -285,12 +416,36 @@ export default function ReservationDetailModal({
                     )}
 
                 </Animated.View>
+
+                {/* Drag circle — floats above the card, positioned in screen space */}
+                {dragCirclePos && (
+                    <View
+                        pointerEvents="none"
+                        style={[styles.dragCircle, { left: dragCirclePos.x - 18, top: dragCirclePos.y - 18 }]}
+                    />
+                )}
             </View>
         </Modal>
     );
 }
 
 const styles = StyleSheet.create({
+    dragCircle: {
+        position: 'absolute',
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#eab308',
+        opacity: 0.92,
+        borderWidth: 2.5,
+        borderColor: '#fff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.5,
+        shadowRadius: 8,
+        elevation: 16,
+        zIndex: 999,
+    },
     backdrop: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.65)',
