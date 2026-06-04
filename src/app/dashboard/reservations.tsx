@@ -553,29 +553,6 @@ const styles = StyleSheet.create({
         backgroundColor: themeConfig.border.subtle,
         marginHorizontal: 4,
     },
-    dateNav: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 6,
-        paddingHorizontal: 4,
-        marginBottom: 4,
-    },
-    dateNavCenter: {
-        alignItems: 'center',
-        gap: 4,
-    },
-    dateNavText: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: themeConfig.text.primary,
-    },
-    todayBadge: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: themeConfig.accent.primary,
-        letterSpacing: 0.5,
-    },
     empty: {
         flex: 1,
         justifyContent: 'center',
@@ -596,10 +573,6 @@ const styles = StyleSheet.create({
         paddingVertical: 14,
         paddingHorizontal: 24,
         borderRadius: 36,
-    },
-    actionBtnRow: {
-        // marginHorizontal: 16,
-        marginBottom: 12,
     },
     actionBtnAbsolute: {
         position: 'absolute',
@@ -729,20 +702,6 @@ const styles = StyleSheet.create({
     eventBanner: {
         width: '100%',
         height: '100%',
-    },
-    eventBannerOverlay: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        backgroundColor: 'rgba(0,0,0,0.45)',
-    },
-    eventBannerName: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#fff',
     },
     datePickerSelectBtn: {
         marginTop: 8,

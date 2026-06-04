@@ -472,12 +472,6 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'flex-end',
     },
-    pill: {
-        width: 36,
-        height: 4,
-        borderRadius: 2,
-        backgroundColor: themeConfig.border.subtle,
-    },
     closeBtn: {
         padding: 4,
     },

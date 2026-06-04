@@ -222,13 +222,6 @@ const styles = StyleSheet.create({
         gap: 16,
         width: '100%',
     },
-    preview: {
-        width: 44,
-        height: 44,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: themeConfig.border.subtle,
-    },
     selectBtn: {
         flex: 1,
         backgroundColor: themeConfig.accent.primary,

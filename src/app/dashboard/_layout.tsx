@@ -164,8 +164,4 @@ const styles = StyleSheet.create({
     paddingLeft: 0,
     backgroundColor: themeConfig.background.primary,
   },
-  menuBtn: {
-    padding: 4,
-    marginLeft: 4,
-  },
 });

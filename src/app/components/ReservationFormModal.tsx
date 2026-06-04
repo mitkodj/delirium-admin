@@ -692,9 +692,6 @@ const styles = StyleSheet.create({
     suggestionItemTextSelected: {
         color: themeConfig.accent.primary,
     },
-    suggestionCheckmark: {
-        marginLeft: 'auto',
-    },
     suggestionDateInline: {
         flexDirection: 'row',
         alignItems: 'center',

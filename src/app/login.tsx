@@ -118,13 +118,6 @@ const styles = StyleSheet.create({
     inner: {
         paddingHorizontal: 24,
     },
-    title: {
-        color: themeConfig.text.primary,
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 32,
-        textAlign: 'center',
-    },
     input: {
         width: '100%',
         backgroundColor: themeConfig.surface.elevated,

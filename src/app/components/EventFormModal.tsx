@@ -467,18 +467,6 @@ const styles = StyleSheet.create({
         color: themeConfig.text.muted
     },
 
-    locationButton: {
-        padding: 14,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: themeConfig.border.subtle,
-        marginBottom: 16
-    },
-
-    locationText: {
-        color: themeConfig.text.primary
-    },
-
     actions: {
         flexDirection: 'row',
         justifyContent: 'space-between'

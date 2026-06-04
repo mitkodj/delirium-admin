@@ -62,34 +62,8 @@ export default function Photos() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: themeConfig.background.primary,
-    borderRadius: 16,
-    width: '100%'
-  },
-
-  content: {
-    paddingVertical: 16,
-  },
-
   detailsItem: {
     // marginHorizontal: 16,
-  },
-
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: themeConfig.text.primary,
-    textAlign: 'center',
-    marginBottom: 21,
-    marginLeft: 105
-  },
-
-  locationText: {
-    textAlign: 'center',
-    fontSize: 14,
-    marginBottom: 20,
   },
 
   gallery: {
@@ -107,13 +81,4 @@ const styles = StyleSheet.create({
     backgroundColor: themeConfig.background.secondary,
   },
 
-  infoPanel: {
-    marginBottom: 16,
-    fontSize: 14,
-    lineHeight: 22,
-    color: '#ddd',
-    backgroundColor: themeConfig.background.secondary,
-    padding: 8,
-    borderRadius: 8
-  },
 });
