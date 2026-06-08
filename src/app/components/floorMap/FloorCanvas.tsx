@@ -21,7 +21,6 @@ interface Props {
   onDeselect: () => void;
   onSelect: (id: string) => void;
   onUpdate: (id: string, patch: Partial<Pick<FloorObject, 'x' | 'y' | 'width' | 'height' | 'label'>>) => void;
-  onDuplicate: (id: string) => void;
 }
 
 type Touch2 = { pageX: number; pageY: number; locationX: number; locationY: number };
@@ -37,7 +36,7 @@ function getMidpoint(t: Touch2[]) {
 }
 
 export default function FloorCanvas({
-  objects, selectedId, width, height, isReadonly, selectOnly, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate, onDuplicate,
+  objects, selectedId, width, height, isReadonly, selectOnly, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate,
 }: Props) {
   const vLines = Math.floor(width  / GRID_SIZE);
   const hLines = Math.floor(height / GRID_SIZE);
@@ -186,7 +185,6 @@ export default function FloorCanvas({
             staticOpacity={dimmedTableId === obj.id ? 0.35 : undefined}
             onSelect={onSelect}
             onUpdate={onUpdate}
-            onDuplicate={onDuplicate}
           />
         ))}
       </View>

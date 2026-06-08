@@ -26,10 +26,9 @@ interface Props {
   staticOpacity?: number;
   onSelect: (id: string) => void;
   onUpdate: (id: string, patch: Partial<Pick<FloorObject, 'x' | 'y' | 'width' | 'height' | 'label' | 'capacity'>>) => void;
-  onDuplicate: (id: string) => void;
 }
 
-export default function FloorItem({ item, isSelected, isReadonly, selectOnly, colorOverride, isPulsing, staticOpacity, onSelect, onUpdate, onDuplicate }: Props) {
+export default function FloorItem({ item, isSelected, isReadonly, selectOnly, colorOverride, isPulsing, staticOpacity, onSelect, onUpdate }: Props) {
   // Keep latest prop values accessible inside stable PanResponder closures
   const itemRef = useRef(item);
   itemRef.current = item;
@@ -165,17 +164,7 @@ export default function FloorItem({ item, isSelected, isReadonly, selectOnly, co
       )}
 
       {!isReadonly && !selectOnly && isSelected && (
-        <>
-          <TouchableOpacity
-            style={styles.duplicateHandle}
-            onPress={() => onDuplicate(item.id)}
-            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.duplicateIcon}>⧉</Text>
-          </TouchableOpacity>
-          <View {...resizeResponder.panHandlers} style={styles.resizeHandle} />
-        </>
+        <View {...resizeResponder.panHandlers} style={styles.resizeHandle} />
       )}
 
       <Modal transparent animationType="fade" visible={isRenaming} onRequestClose={() => setIsRenaming(false)}>
@@ -245,22 +234,6 @@ const styles = StyleSheet.create({
     height: HANDLE_SIZE,
     borderRadius: 3,
     backgroundColor: themeConfig.accent.primary,
-  },
-  duplicateHandle: {
-    position: 'absolute',
-    top: 2,
-    right: 2,
-    width: HANDLE_SIZE,
-    height: HANDLE_SIZE,
-    borderRadius: 3,
-    backgroundColor: themeConfig.background.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  duplicateIcon: {
-    fontSize: 9,
-    color: themeConfig.accent.primary,
-    lineHeight: 12,
   },
   renameOverlay: {
     flex: 1,

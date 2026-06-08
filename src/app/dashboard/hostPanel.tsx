@@ -42,6 +42,16 @@ export default function HostPanel() {
   const nextIdRef = useRef(1);
   const nextIdInitialized = useRef(false);
 
+  // Undo / redo
+  const floorsRef = useRef(floors);
+  floorsRef.current = floors;
+  const undoStackRef = useRef<Floor[][]>([]);
+  const redoStackRef = useRef<Floor[][]>([]);
+  const isDraggingRef = useRef(false);
+  const dragEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
   // ── Edit-mode freehand pan ────────────────────────────────────────
   const [editPan, setEditPan] = useState({ tx: 0, ty: 0 });
   const editPanLive = useRef({ tx: 0, ty: 0 });
@@ -92,11 +102,20 @@ export default function HostPanel() {
     nextIdRef.current = max + 1;
   }, [floors]);
 
+  // Clear history when switching floors
+  useEffect(() => {
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
+    isDraggingRef.current = false;
+  }, [activeFloorId]);
+
   // ── Mode transitions ──────────────────────────────────────────────
 
   const resetEditPan = () => { setEditPan({ tx: 0, ty: 0 }); editPanLive.current = { tx: 0, ty: 0 }; };
-  const enterEdit = () => { setFloorsSnapshot(floors); setEditDate(null); setMode('edit'); resetEditPan(); };
-  const enterEditForDate = () => { setFloorsSnapshot(floors); setEditDate(new Date()); setMode('edit'); resetEditPan(); };
+  const enterEdit = () => { setFloorsSnapshot(floors); setEditDate(null); setMode('edit'); resetEditPan(); clearHistory(); };
+  const enterEditForDate = () => { setFloorsSnapshot(floors); setEditDate(new Date()); setMode('edit'); resetEditPan(); clearHistory(); };
   const exitEdit = () => { setSelectedId(null); setEditDate(null); setMode('preview'); };
   const cancelEdit = () => { setFloors(floorsSnapshot); exitEdit(); };
 
@@ -120,6 +139,7 @@ export default function HostPanel() {
   };
 
   const addObject = (type: FloorObjectType) => {
+    pushToHistory(floorsRef.current);
     const { w, h } = DEFAULT_SIZES[type];
     const id = nextIdRef.current++;
     const offset = (id % 8) * 16;
@@ -144,6 +164,17 @@ export default function HostPanel() {
     id: string,
     patch: Partial<Pick<FloorObject, 'x' | 'y' | 'width' | 'height' | 'label' | 'capacity'>>
   ) => {
+    const hasSpatial = 'x' in patch || 'y' in patch || 'width' in patch || 'height' in patch;
+    if (hasSpatial) {
+      if (!isDraggingRef.current) {
+        pushToHistory(floorsRef.current);
+        isDraggingRef.current = true;
+      }
+      if (dragEndTimerRef.current) clearTimeout(dragEndTimerRef.current);
+      dragEndTimerRef.current = setTimeout(() => { isDraggingRef.current = false; }, 600);
+    } else {
+      pushToHistory(floorsRef.current);
+    }
     setFloors(prev => prev.map(f => {
       if (f.id !== activeFloorId) return f;
       const updatedObjects = f.objects.map(o => o.id === id ? { ...o, ...patch } : o);
@@ -152,6 +183,7 @@ export default function HostPanel() {
   };
 
   const duplicateObject = (id: string) => {
+    pushToHistory(floorsRef.current);
     let copyId: string | null = null;
     setFloors(prev => prev.map(f => {
       if (f.id !== activeFloorId) return f;
@@ -167,6 +199,7 @@ export default function HostPanel() {
 
   const deleteSelected = () => {
     if (!selectedId) return;
+    pushToHistory(floorsRef.current);
     setFloors(prev => prev.map(f =>
       f.id !== activeFloorId ? f : {
         ...f,
@@ -174,6 +207,43 @@ export default function HostPanel() {
       }
     ));
     setSelectedId(null);
+  };
+
+  // ── History ───────────────────────────────────────────────────────
+
+  const pushToHistory = (snapshot: Floor[]) => {
+    undoStackRef.current = [...undoStackRef.current.slice(-49), snapshot];
+    redoStackRef.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
+  };
+
+  const clearHistory = () => {
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setCanUndo(false);
+    setCanRedo(false);
+    isDraggingRef.current = false;
+  };
+
+  const undo = () => {
+    if (!undoStackRef.current.length) return;
+    const prev = undoStackRef.current[undoStackRef.current.length - 1];
+    redoStackRef.current = [floorsRef.current, ...redoStackRef.current.slice(0, 49)];
+    undoStackRef.current = undoStackRef.current.slice(0, -1);
+    setFloors(prev);
+    setCanUndo(undoStackRef.current.length > 0);
+    setCanRedo(true);
+  };
+
+  const redo = () => {
+    if (!redoStackRef.current.length) return;
+    const next = redoStackRef.current[0];
+    undoStackRef.current = [...undoStackRef.current.slice(-49), floorsRef.current];
+    redoStackRef.current = redoStackRef.current.slice(1);
+    setFloors(next);
+    setCanUndo(true);
+    setCanRedo(redoStackRef.current.length > 0);
   };
 
   // ── Floor operations ──────────────────────────────────────────────
@@ -307,7 +377,6 @@ export default function HostPanel() {
                 onDeselect={() => {}}
                 onSelect={() => {}}
                 onUpdate={() => {}}
-                onDuplicate={() => {}}
               />
             </View>
           </View>
@@ -383,16 +452,31 @@ export default function HostPanel() {
                 onDeselect={() => setSelectedId(null)}
                 onSelect={setSelectedId}
                 onUpdate={updateObject}
-                onDuplicate={duplicateObject}
               />
             </View>
 
-            {selectedId !== null && (
-              <TouchableOpacity style={styles.floatingDelete} onPress={deleteSelected} activeOpacity={0.8}>
-                <Ionicons name="trash-outline" size={16} color="#ff6b6b" />
-                <Text style={styles.floatingDeleteLabel}>Delete</Text>
+            <View style={styles.floatingActions}>
+              <TouchableOpacity style={[styles.floatingUndoRedo, !canUndo && styles.floatingUndoRedoDisabled]} onPress={undo} activeOpacity={0.8} disabled={!canUndo}>
+                <Ionicons name="arrow-undo-outline" size={16} color={canUndo ? themeConfig.text.primary : themeConfig.text.muted} />
+                <Text style={[styles.floatingUndoRedoLabel, !canUndo && styles.floatingUndoRedoLabelDisabled]}>Undo</Text>
               </TouchableOpacity>
-            )}
+              <TouchableOpacity style={[styles.floatingUndoRedo, !canRedo && styles.floatingUndoRedoDisabled]} onPress={redo} activeOpacity={0.8} disabled={!canRedo}>
+                <Ionicons name="arrow-redo-outline" size={16} color={canRedo ? themeConfig.text.primary : themeConfig.text.muted} />
+                <Text style={[styles.floatingUndoRedoLabel, !canRedo && styles.floatingUndoRedoLabelDisabled]}>Redo</Text>
+              </TouchableOpacity>
+              {selectedId !== null && (
+                <>
+                  <TouchableOpacity style={styles.floatingDuplicate} onPress={() => duplicateObject(selectedId)} activeOpacity={0.8}>
+                    <Ionicons name="copy-outline" size={16} color={themeConfig.accent.primary} />
+                    <Text style={styles.floatingDuplicateLabel}>Duplicate</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.floatingDelete} onPress={deleteSelected} activeOpacity={0.8}>
+                    <Ionicons name="trash-outline" size={16} color="#ff6b6b" />
+                    <Text style={styles.floatingDeleteLabel}>Delete</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
           </View>
 
           {/* Bottom actions */}
@@ -598,10 +682,30 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     zIndex: 10,
   },
-  floatingDelete: {
+  floatingActions: {
     position: 'absolute',
     bottom: 12,
     left: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  floatingDuplicate: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeConfig.background.secondary,
+    borderWidth: 1.5,
+    borderColor: themeConfig.accent.primary,
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  floatingDuplicateLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: themeConfig.accent.primary,
+    marginLeft: 6,
+  },
+  floatingDelete: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2a1010',
@@ -616,6 +720,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ff6b6b',
     marginLeft: 6,
+  },
+  floatingUndoRedo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: themeConfig.background.secondary,
+    borderWidth: 1.5,
+    borderColor: themeConfig.border.subtle,
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  floatingUndoRedoDisabled: {
+    opacity: 0.4,
+  },
+  floatingUndoRedoLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: themeConfig.text.primary,
+    marginLeft: 6,
+  },
+  floatingUndoRedoLabelDisabled: {
+    color: themeConfig.text.muted,
   },
   // Bottom actions
   bottomActions: {
