@@ -218,7 +218,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         setSelectedTables([]);
         setPhone('');
         setComment('');
-        setStatus(ReservationStatus.OPEN);
+        setStatus(ReservationStatus.APPROVED);
         setError(null);
         setContactSuggestions([]);
         setSelectedSuggestionPhone(null);
