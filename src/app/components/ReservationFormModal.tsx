@@ -69,7 +69,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
         (sum, t) => sum + (allObjects.find(o => o.id === t.id)?.capacity ?? 0), 0
     );
     const capacityExceeded = selectedTables.length > 0 && !isNaN(numPeople) && numPeople > totalCapacity;
-    const saveBtnEnabled = !!(firstName && lastName && phone && phoneValid);
+    const saveBtnEnabled = !!(firstName && lastName && phoneValid);
 
     useEffect(() => {
         if (visible && club?.id) loadLayout(club.id);
@@ -241,7 +241,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
                     </View>
                 )}
 
-                <ScrollView showsVerticalScrollIndicator={false}>
+                <ScrollView showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag">
 
                     {/* Name row */}
                     <View style={styles.row}>
