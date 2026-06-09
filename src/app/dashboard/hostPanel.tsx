@@ -456,14 +456,6 @@ export default function HostPanel() {
             </View>
 
             <View style={styles.floatingActions}>
-              <TouchableOpacity style={[styles.floatingUndoRedo, !canUndo && styles.floatingUndoRedoDisabled]} onPress={undo} activeOpacity={0.8} disabled={!canUndo}>
-                <Ionicons name="arrow-undo-outline" size={16} color={canUndo ? themeConfig.text.primary : themeConfig.text.muted} />
-                <Text style={[styles.floatingUndoRedoLabel, !canUndo && styles.floatingUndoRedoLabelDisabled]}>Undo</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.floatingUndoRedo, !canRedo && styles.floatingUndoRedoDisabled]} onPress={redo} activeOpacity={0.8} disabled={!canRedo}>
-                <Ionicons name="arrow-redo-outline" size={16} color={canRedo ? themeConfig.text.primary : themeConfig.text.muted} />
-                <Text style={[styles.floatingUndoRedoLabel, !canRedo && styles.floatingUndoRedoLabelDisabled]}>Redo</Text>
-              </TouchableOpacity>
               {selectedId !== null && (
                 <>
                   <TouchableOpacity style={styles.floatingDuplicate} onPress={() => duplicateObject(selectedId)} activeOpacity={0.8}>
@@ -476,6 +468,12 @@ export default function HostPanel() {
                   </TouchableOpacity>
                 </>
               )}
+              <TouchableOpacity style={[styles.floatingUndoRedo, !canUndo && styles.floatingUndoRedoDisabled]} onPress={undo} activeOpacity={0.8} disabled={!canUndo}>
+                <Ionicons name="arrow-undo-outline" size={18} color={canUndo ? themeConfig.text.primary : themeConfig.text.muted} />
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.floatingUndoRedo, !canRedo && styles.floatingUndoRedoDisabled]} onPress={redo} activeOpacity={0.8} disabled={!canRedo}>
+                <Ionicons name="arrow-redo-outline" size={18} color={canRedo ? themeConfig.text.primary : themeConfig.text.muted} />
+              </TouchableOpacity>
             </View>
           </View>
 
@@ -722,26 +720,17 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   floatingUndoRedo: {
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: themeConfig.background.secondary,
     borderWidth: 1.5,
     borderColor: themeConfig.border.subtle,
     borderRadius: 8,
-    paddingVertical: 7,
-    paddingHorizontal: 12,
+    width: 34,
+    height: 34,
   },
   floatingUndoRedoDisabled: {
     opacity: 0.4,
-  },
-  floatingUndoRedoLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: themeConfig.text.primary,
-    marginLeft: 6,
-  },
-  floatingUndoRedoLabelDisabled: {
-    color: themeConfig.text.muted,
   },
   // Bottom actions
   bottomActions: {
