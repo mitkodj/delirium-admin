@@ -190,7 +190,15 @@ export default function HostPanel() {
       const src = f.objects.find(o => o.id === id);
       if (!src) return f;
       copyId = `obj-${nextIdRef.current++}`;
-      const copy: FloorObject = { ...src, id: copyId, x: src.x + 10, y: src.y + 10 };
+      const baseLabel = src.label ?? '';
+      const escapedBase = baseLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const copyPattern = new RegExp(`^${escapedBase}\\((\\d+)\\)$`);
+      const existingNums = f.objects
+        .map(o => { const m = (o.label ?? '').match(copyPattern); return m ? parseInt(m[1], 10) : 0; })
+        .filter(n => n > 0);
+      const copyNum = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
+      const copyLabel = `${baseLabel}(${copyNum})`;
+      const copy: FloorObject = { ...src, id: copyId, label: copyLabel, x: src.x + 10, y: src.y + 10 };
       const withCopy = { ...f, objects: [...f.objects, copy] };
       return growFloor(withCopy, copy.x + copy.width, copy.y + copy.height);
     }));
