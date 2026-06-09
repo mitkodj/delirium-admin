@@ -15,6 +15,7 @@ interface Props {
   height: number;
   isReadonly: boolean;
   selectOnly?: boolean;
+  zoomEnabled?: boolean;
   tableColorOverrides?: Record<string, string>;
   pulsingTableIds?: string[];
   dimmedTableId?: string;
@@ -36,12 +37,12 @@ function getMidpoint(t: Touch2[]) {
 }
 
 export default function FloorCanvas({
-  objects, selectedId, width, height, isReadonly, selectOnly, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate,
+  objects, selectedId, width, height, isReadonly, selectOnly, zoomEnabled: zoomEnabledProp, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate,
 }: Props) {
   const vLines = Math.floor(width  / GRID_SIZE);
   const hLines = Math.floor(height / GRID_SIZE);
 
-  const zoomEnabled = isReadonly;
+  const zoomEnabled = zoomEnabledProp ?? isReadonly;
 
   // live values — always reflect current state
   const liveScale = useRef(1);
@@ -131,12 +132,12 @@ export default function FloorCanvas({
 
   return (
     <View
-      style={[styles.canvas, { width, height }, isReadonly && { overflow: 'visible', borderRadius: 0, borderWidth: 0 }]}
+      style={[styles.canvas, { width, height }, zoomEnabled && { overflow: 'visible', borderRadius: 0, borderWidth: 0 }]}
       {...(zoomEnabled ? pinchResponder.panHandlers : {})}
     >
       {/* Zoomable content layer */}
       <View
-        pointerEvents={zoomEnabled && !selectOnly ? 'none' : 'box-none'}
+        pointerEvents={zoomEnabled && !selectOnly && isReadonly ? 'none' : 'box-none'}
         style={{ width, height, transform: zoomEnabled ? [{ translateX: view.tx }, { translateY: view.ty }, { scale: view.scale }] : undefined }}
       >
         {/* Background tap target — only active in edit mode */}

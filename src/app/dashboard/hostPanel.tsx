@@ -449,6 +449,7 @@ export default function HostPanel() {
                 width={activeCanvasW}
                 height={activeCanvasH}
                 isReadonly={false}
+                zoomEnabled={true}
                 onDeselect={() => setSelectedId(null)}
                 onSelect={setSelectedId}
                 onUpdate={updateObject}
