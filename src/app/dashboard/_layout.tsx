@@ -45,11 +45,13 @@ function DashboardContent() {
     }).start();
   }, [sidebarOpen]);
 
-  const navItems = [
+  const topItems = [
+    { route: '/dashboard/reservations', icon: 'ticket-outline' },
+  ];
+
+  const middleItems = [
     { route: '/dashboard/home', icon: 'home-outline' },
     { route: '/dashboard/events', icon: 'calendar-outline' },
-    { route: '/dashboard/photos', icon: 'images-outline' },
-    { route: '/dashboard/reservations', icon: 'ticket-outline' },
   ];
 
   return (
@@ -60,13 +62,25 @@ function DashboardContent() {
         {/* SIDEBAR */}
         <Animated.View style={[styles.sidebar, { paddingTop: insets.top, width: sidebarWidth }]}>
 
-          {/* TOP NAV ITEMS */}
+          {/* TOP: toggle + reservations */}
           <View>
             <SidebarIcon
               icon="chevron-back"
               onPress={toggleSidebar}
             />
-            {navItems.map((item) => (
+            {topItems.map((item: { route: string; icon: string }) => (
+              <SidebarIcon
+                key={item.route}
+                icon={item.icon}
+                active={pathname === item.route}
+                onPress={() => router.replace(item.route)}
+              />
+            ))}
+          </View>
+
+          {/* MIDDLE: home + events */}
+          <View>
+            {middleItems.map((item: { route: string; icon: string }) => (
               <SidebarIcon
                 key={item.route}
                 icon={item.icon}
@@ -82,6 +96,12 @@ function DashboardContent() {
               icon="map-outline"
               active={pathname === '/dashboard/hostPanel'}
               onPress={() => router.replace('/dashboard/hostPanel')}
+            />
+
+            <SidebarIcon
+              icon="images-outline"
+              active={pathname === '/dashboard/photos'}
+              onPress={() => router.replace('/dashboard/photos')}
             />
 
             <SidebarIcon
