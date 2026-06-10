@@ -27,6 +27,14 @@ export function buildAssetUrl(name: string) {
   return `${partyService}/api/assets/${name}`;
 }
 
+export function buildAssetSource(name: string | null | undefined): { uri: string; headers: Record<string, string> } {
+  const token = (globalThis as any).authToken as string | undefined;
+  return {
+    uri: buildAssetUrl(name ?? ''),
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  };
+}
+
 export function mapClubToEvent(event: DEvent, clubs: Club[]) {
   return {
       ...event,

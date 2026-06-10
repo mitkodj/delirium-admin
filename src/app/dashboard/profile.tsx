@@ -11,7 +11,7 @@ import themeConfig from '../../themes/themeConfig';
 import MapPickerModal from '../components/LocationSelectorModal';
 import ColorPickerModal from '../components/ColorPickerModal';
 import { uploadBanner, updateClub } from '../../utils/service';
-import { buildAssetUrl } from '../../helpers/utils';
+import { buildAssetSource } from '../../helpers/utils';
 import { Club } from '../../types/Disco';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -29,9 +29,7 @@ export default function Profile() {
             ? { address: club.locationNormalized, latitude: club.location?.latitude ?? 0, longitude: club.location?.longitude ?? 0 }
             : null
     );
-    const [banner, setBanner] = useState<string | null>(
-        club?.defaultBanner ? buildAssetUrl(club.defaultBanner) : null
-    );
+    const [banner, setBanner] = useState<string | null>(null);
     const [bannerFileName, setBannerFileName] = useState<string>(club?.defaultBanner ?? '');
     const [bannerChanged, setBannerChanged] = useState(false);
     const [accentColor, setAccentColor] = useState(club?.accentColor ?? '#eab308');
@@ -173,8 +171,8 @@ export default function Profile() {
 
                 {/* Banner */}
                 <TouchableOpacity style={styles.bannerPicker} onPress={pickBanner} activeOpacity={0.85}>
-                    {banner ? (
-                        <Image source={{ uri: banner }} style={styles.bannerImage} resizeMode="cover" />
+                    {(banner || bannerFileName) ? (
+                        <Image source={bannerChanged && banner ? { uri: banner } : buildAssetSource(bannerFileName)} style={styles.bannerImage} resizeMode="cover" />
                     ) : (
                         <View style={styles.bannerPlaceholder}>
                             <Ionicons name="image-outline" size={36} color={themeConfig.text.muted} />

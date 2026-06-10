@@ -18,7 +18,7 @@ import { useSidebar } from '../../providers/SidebarContext';
 import { useClubData } from '../../providers/ClubDataContext';
 import { getReservations, updateReservation, fetchEventsForDate } from '../../utils/service';
 import { ReservationRow } from '../components/ReservationRow';
-import { buildAssetUrl } from '../../helpers/utils';
+import { buildAssetSource } from '../../helpers/utils';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -507,7 +507,7 @@ export default function Reservations() {
                     <View style={styles.datePickerCard}>
                         {currentEvent?.banner ? (
                             <View style={styles.eventBannerWrap}>
-                                <Image source={{ uri: buildAssetUrl(currentEvent.banner) }} style={styles.eventBanner} resizeMode="cover" />
+                                <Image source={buildAssetSource(currentEvent.banner)} style={styles.eventBanner} resizeMode="cover" />
                             </View>
                         ) : null}
                         <DateTimePicker

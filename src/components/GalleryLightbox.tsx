@@ -9,7 +9,7 @@ import {
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { buildAssetUrl } from '../helpers/utils';
+import { buildAssetUrl, buildAssetSource } from '../helpers/utils';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -47,7 +47,7 @@ export default function GalleryLightbox({ images, index, onClose }: Props) {
 
         {/* IMAGE */}
         <Image
-          source={{ uri: imageUrl }}
+          source={buildAssetSource(image.imageName)}
           style={[
             styles.image,
             isLandscape

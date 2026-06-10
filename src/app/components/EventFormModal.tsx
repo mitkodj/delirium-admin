@@ -21,7 +21,7 @@ import LocationSelector from './LocationSelector'
 import MapPickerModal from './LocationSelectorModal'
 import { createEvent, updateEvent, uploadBanner, setEventsGenres } from '../../utils/service'
 import { Club, DGenre } from '../../types/Disco'
-import { buildAssetUrl } from '../../helpers/utils'
+import { buildAssetSource } from '../../helpers/utils'
 import GenreSelector from './EventGenreSelector' 
 
 type Props = {
@@ -193,7 +193,7 @@ export default function EventFormModal({
                             }]}
                         >
                             <Image
-                                source={{ uri: buildAssetUrl(club?.defaultBanner) }}
+                                source={buildAssetSource(club?.defaultBanner)}
                                 style={styles.squareImage}
                             />
                         </View>

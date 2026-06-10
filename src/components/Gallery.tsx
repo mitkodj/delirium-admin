@@ -10,7 +10,7 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import * as ImagePicker from 'expo-image-picker'
-import { buildAssetUrl } from '../helpers/utils'
+import { buildAssetSource } from '../helpers/utils'
 import { editDiscoImages, uploadBanner } from '../utils/service'
 import GalleryLightbox from './GalleryLightbox'
 
@@ -29,9 +29,9 @@ type GalleryItem = DiscoImage | NewImage
 const isNew = (item: GalleryItem): item is NewImage =>
     (item as NewImage).isNew === true
 
-function getDisplayUri(item: GalleryItem): string {
-    if (isNew(item)) return item.uri
-    return buildAssetUrl((item as DiscoImage).imageName)
+function getDisplayUri(item: GalleryItem): { uri: string } | { uri: string; headers: Record<string, string> } {
+    if (isNew(item)) return { uri: item.uri }
+    return buildAssetSource((item as DiscoImage).imageName)
 }
 
 type Props = {
@@ -159,7 +159,7 @@ export default function Gallery({
                             }}
                         >
                             <Image
-                                source={{ uri: getDisplayUri(item) }}
+                                source={getDisplayUri(item)}
                                 style={[styles.thumb, imageStyle]}
                             />
                         </TouchableOpacity>
