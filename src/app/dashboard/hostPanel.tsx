@@ -40,14 +40,13 @@ export default function HostPanel() {
   const [floorDraftName, setFloorDraftName] = useState('');
   const [floorsSnapshot, setFloorsSnapshot] = useState<Floor[]>([]);
   const [autoSnap, setAutoSnap] = useState(false);
+  const [snapGuides, setSnapGuides] = useState<{ x: number[]; y: number[] }>({ x: [], y: [] });
   const nextIdRef = useRef(1);
   const nextIdInitialized = useRef(false);
 
   // Undo / redo
   const floorsRef = useRef(floors);
   floorsRef.current = floors;
-  const autoSnapRef = useRef(autoSnap);
-  autoSnapRef.current = autoSnap;
   const undoStackRef = useRef<Floor[][]>([]);
   const redoStackRef = useRef<Floor[][]>([]);
   const isDraggingRef = useRef(false);
@@ -176,13 +175,14 @@ export default function HostPanel() {
         isDraggingRef.current = true;
       }
       if (dragEndTimerRef.current) clearTimeout(dragEndTimerRef.current);
-      dragEndTimerRef.current = setTimeout(() => { isDraggingRef.current = false; }, 600);
+      dragEndTimerRef.current = setTimeout(() => { isDraggingRef.current = false; setSnapGuides({ x: [], y: [] }); }, 600);
     } else {
       pushToHistory(floorsRef.current);
     }
 
     let effectivePatch = patch;
-    if (autoSnapRef.current && ('x' in patch || 'y' in patch)) {
+    let newSnapGuides: { x: number[]; y: number[] } | null = null;
+    if (autoSnap && ('x' in patch || 'y' in patch)) {
       const floor = floorsRef.current.find(f => f.id === activeFloorId);
       if (floor) {
         const obj = floor.objects.find(o => o.id === id);
@@ -195,6 +195,8 @@ export default function HostPanel() {
           let snappedY = newY;
           let bestDx = SNAP_THRESHOLD;
           let bestDy = SNAP_THRESHOLD;
+          let guideXEdge: number | null = null;
+          let guideYEdge: number | null = null;
           for (const other of floor.objects) {
             if (other.id === id) continue;
             const otherEdgesX = [other.x, other.x + other.width];
@@ -202,17 +204,17 @@ export default function HostPanel() {
             if ('x' in patch) {
               for (const edge of otherEdgesX) {
                 const dLeft = Math.abs(newX - edge);
-                if (dLeft < bestDx) { bestDx = dLeft; snappedX = edge; }
+                if (dLeft < bestDx) { bestDx = dLeft; snappedX = edge; guideXEdge = edge; }
                 const dRight = Math.abs(newX + w - edge);
-                if (dRight < bestDx) { bestDx = dRight; snappedX = edge - w; }
+                if (dRight < bestDx) { bestDx = dRight; snappedX = edge - w; guideXEdge = edge; }
               }
             }
             if ('y' in patch) {
               for (const edge of otherEdgesY) {
                 const dTop = Math.abs(newY - edge);
-                if (dTop < bestDy) { bestDy = dTop; snappedY = edge; }
+                if (dTop < bestDy) { bestDy = dTop; snappedY = edge; guideYEdge = edge; }
                 const dBottom = Math.abs(newY + h - edge);
-                if (dBottom < bestDy) { bestDy = dBottom; snappedY = edge - h; }
+                if (dBottom < bestDy) { bestDy = dBottom; snappedY = edge - h; guideYEdge = edge; }
               }
             }
           }
@@ -221,9 +223,14 @@ export default function HostPanel() {
             ...('x' in patch && { x: snappedX }),
             ...('y' in patch && { y: snappedY }),
           };
+          newSnapGuides = {
+            x: guideXEdge !== null ? [guideXEdge] : [],
+            y: guideYEdge !== null ? [guideYEdge] : [],
+          };
         }
       }
     }
+    if (newSnapGuides !== null) setSnapGuides(newSnapGuides);
 
     setFloors(prev => prev.map(f => {
       if (f.id !== activeFloorId) return f;
@@ -463,51 +470,48 @@ export default function HostPanel() {
           {/* Toolbar */}
           <Toolbar onAdd={addObject} />
 
-          {/* Floor tabs row */}
-          <View style={styles.floorTabsRow}>
-            <View style={{ flex: 1, overflow: 'hidden' }}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.floorTabsScroll}
-              contentContainerStyle={styles.floorTabsContent}
-            >
-              {floors.map((floor, index) => (
-                <TouchableOpacity
-                  key={floor.id}
-                  style={[styles.floorTab, floor.id === activeFloorId && styles.floorTabActive]}
-                  onPress={() => setActiveFloorId(floor.id)}
-                  onLongPress={() => openFloorRename(floor.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.floorTabLabel, floor.id === activeFloorId && styles.floorTabLabelActive]}>
-                    {floor.name}
-                  </Text>
-                  {floors.length > 1 && index !== 0 && (
-                    <TouchableOpacity
-                      style={styles.floorTabClose}
-                      onPress={() => deleteFloor(floor.id)}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                      activeOpacity={0.7}
-                    >
-                      <Ionicons name="close" size={12} color={themeConfig.text.muted} />
-                    </TouchableOpacity>
-                  )}
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity style={styles.addFloorBtn} onPress={addFloor} activeOpacity={0.7}>
-                <Ionicons name="add" size={18} color={themeConfig.accent.primary} />
+          {/* Floor tabs */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.floorTabsScroll}
+            contentContainerStyle={styles.floorTabsContent}
+          >
+            {floors.map((floor, index) => (
+              <TouchableOpacity
+                key={floor.id}
+                style={[styles.floorTab, floor.id === activeFloorId && styles.floorTabActive]}
+                onPress={() => setActiveFloorId(floor.id)}
+                onLongPress={() => openFloorRename(floor.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.floorTabLabel, floor.id === activeFloorId && styles.floorTabLabelActive]}>
+                  {floor.name}
+                </Text>
+                {floors.length > 1 && index !== 0 && (
+                  <TouchableOpacity
+                    style={styles.floorTabClose}
+                    onPress={() => deleteFloor(floor.id)}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="close" size={12} color={themeConfig.text.muted} />
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
-            </ScrollView>
-            </View>
-
-            <TouchableOpacity style={[styles.snapToggle, autoSnap && styles.snapToggleOn]} onPress={() => setAutoSnap(prev => !prev)} activeOpacity={0.7}>
-              <View style={[styles.snapCheckbox, autoSnap && styles.snapCheckboxOn]}>
-                {autoSnap && <Ionicons name="checkmark" size={11} color="#fff" />}
-              </View>
-              <Text style={[styles.snapToggleLabel, autoSnap && styles.snapToggleLabelOn]}>Auto Snap</Text>
+            ))}
+            <TouchableOpacity style={styles.addFloorBtn} onPress={addFloor} activeOpacity={0.7}>
+              <Ionicons name="add" size={18} color={themeConfig.accent.primary} />
             </TouchableOpacity>
-          </View>
+          </ScrollView>
+
+          {/* Auto snap toggle */}
+          <TouchableOpacity style={styles.snapRow} onPress={() => setAutoSnap(prev => !prev)} activeOpacity={0.7}>
+            <View style={[styles.snapCheckbox, autoSnap && styles.snapCheckboxOn]}>
+              {autoSnap && <Ionicons name="checkmark" size={11} color="#fff" />}
+            </View>
+            <Text style={styles.snapLabel}>Auto snap objects</Text>
+          </TouchableOpacity>
 
           {/* Canvas */}
           <View style={styles.canvasWrapper} {...editPanResponder.panHandlers}>
@@ -519,6 +523,7 @@ export default function HostPanel() {
                 height={activeCanvasH}
                 isReadonly={false}
                 zoomEnabled={true}
+                snapGuides={autoSnap ? snapGuides : undefined}
                 onDeselect={() => setSelectedId(null)}
                 onSelect={setSelectedId}
                 onUpdate={updateObject}
@@ -702,6 +707,7 @@ const styles = StyleSheet.create({
   // Floor tabs
   floorTabsScroll: {
     flexGrow: 0,
+    marginBottom: 10,
   },
   floorTabsContent: {
     flexDirection: 'row',
@@ -938,32 +944,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: themeConfig.text.inverse,
   },
-  floorTabsRow: {
+  snapRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
     gap: 8,
-  },
-  snapToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
     paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: themeConfig.background.secondary,
-    borderWidth: 1.5,
-    borderColor: themeConfig.border.subtle,
-  },
-  snapToggleOn: {
-    borderColor: themeConfig.accent.primary,
+    paddingHorizontal: 2,
+    marginBottom: 6,
   },
   snapCheckbox: {
-    width: 15,
-    height: 15,
-    borderRadius: 3,
+    width: 18,
+    height: 18,
+    borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: themeConfig.text.muted,
+    borderColor: themeConfig.border.subtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -971,12 +965,9 @@ const styles = StyleSheet.create({
     backgroundColor: themeConfig.accent.primary,
     borderColor: themeConfig.accent.primary,
   },
-  snapToggleLabel: {
-    fontSize: 11,
-    fontWeight: '600',
+  snapLabel: {
+    fontSize: 12,
+    fontWeight: '500',
     color: themeConfig.text.muted,
-  },
-  snapToggleLabelOn: {
-    color: themeConfig.accent.primary,
   },
 });

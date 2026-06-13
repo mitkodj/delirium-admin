@@ -16,6 +16,7 @@ interface Props {
   isReadonly: boolean;
   selectOnly?: boolean;
   zoomEnabled?: boolean;
+  snapGuides?: { x: number[]; y: number[] };
   tableColorOverrides?: Record<string, string>;
   pulsingTableIds?: string[];
   dimmedTableId?: string;
@@ -37,7 +38,7 @@ function getMidpoint(t: Touch2[]) {
 }
 
 export default function FloorCanvas({
-  objects, selectedId, width, height, isReadonly, selectOnly, zoomEnabled: zoomEnabledProp, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate,
+  objects, selectedId, width, height, isReadonly, selectOnly, zoomEnabled: zoomEnabledProp, snapGuides, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate,
 }: Props) {
   const vLines = Math.floor(width  / GRID_SIZE);
   const hLines = Math.floor(height / GRID_SIZE);
@@ -170,6 +171,18 @@ export default function FloorCanvas({
                   width,
                 }]}
               />
+            ))}
+          </View>
+        )}
+
+        {/* Snap guide lines — shown when auto-snap aligns an edge */}
+        {snapGuides && (snapGuides.x.length > 0 || snapGuides.y.length > 0) && (
+          <View pointerEvents="none" style={[StyleSheet.absoluteFillObject, { zIndex: 2 }]}>
+            {snapGuides.x.map((gx, i) => (
+              <View key={`sgx${i}`} style={{ position: 'absolute', left: gx, top: 0, width: 1, height, backgroundColor: '#f59e0b', opacity: 0.9 }} />
+            ))}
+            {snapGuides.y.map((gy, i) => (
+              <View key={`sgy${i}`} style={{ position: 'absolute', top: gy, left: 0, height: 1, width, backgroundColor: '#f59e0b', opacity: 0.9 }} />
             ))}
           </View>
         )}
