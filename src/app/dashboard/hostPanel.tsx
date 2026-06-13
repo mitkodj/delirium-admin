@@ -39,6 +39,8 @@ export default function HostPanel() {
   const [renamingFloorId, setRenamingFloorId] = useState<string | null>(null);
   const [floorDraftName, setFloorDraftName] = useState('');
   const [floorsSnapshot, setFloorsSnapshot] = useState<Floor[]>([]);
+  const [autoSnap, setAutoSnap] = useState(false);
+  const [snapGuides, setSnapGuides] = useState<{ x: number[]; y: number[] }>({ x: [], y: [] });
   const nextIdRef = useRef(1);
   const nextIdInitialized = useRef(false);
 
@@ -160,6 +162,8 @@ export default function HostPanel() {
     setSelectedId(newObj.id);
   };
 
+  const SNAP_THRESHOLD = 10;
+
   const updateObject = (
     id: string,
     patch: Partial<Pick<FloorObject, 'x' | 'y' | 'width' | 'height' | 'label' | 'capacity'>>
@@ -171,13 +175,66 @@ export default function HostPanel() {
         isDraggingRef.current = true;
       }
       if (dragEndTimerRef.current) clearTimeout(dragEndTimerRef.current);
-      dragEndTimerRef.current = setTimeout(() => { isDraggingRef.current = false; }, 600);
+      dragEndTimerRef.current = setTimeout(() => { isDraggingRef.current = false; setSnapGuides({ x: [], y: [] }); }, 600);
     } else {
       pushToHistory(floorsRef.current);
     }
+
+    let effectivePatch = patch;
+    let newSnapGuides: { x: number[]; y: number[] } | null = null;
+    if (autoSnap && ('x' in patch || 'y' in patch)) {
+      const floor = floorsRef.current.find(f => f.id === activeFloorId);
+      if (floor) {
+        const obj = floor.objects.find(o => o.id === id);
+        if (obj) {
+          const newX = 'x' in patch ? patch.x! : obj.x;
+          const newY = 'y' in patch ? patch.y! : obj.y;
+          const w = obj.width;
+          const h = obj.height;
+          let snappedX = newX;
+          let snappedY = newY;
+          let bestDx = SNAP_THRESHOLD;
+          let bestDy = SNAP_THRESHOLD;
+          let guideXEdge: number | null = null;
+          let guideYEdge: number | null = null;
+          for (const other of floor.objects) {
+            if (other.id === id) continue;
+            const otherEdgesX = [other.x, other.x + other.width];
+            const otherEdgesY = [other.y, other.y + other.height];
+            if ('x' in patch) {
+              for (const edge of otherEdgesX) {
+                const dLeft = Math.abs(newX - edge);
+                if (dLeft < bestDx) { bestDx = dLeft; snappedX = edge; guideXEdge = edge; }
+                const dRight = Math.abs(newX + w - edge);
+                if (dRight < bestDx) { bestDx = dRight; snappedX = edge - w; guideXEdge = edge; }
+              }
+            }
+            if ('y' in patch) {
+              for (const edge of otherEdgesY) {
+                const dTop = Math.abs(newY - edge);
+                if (dTop < bestDy) { bestDy = dTop; snappedY = edge; guideYEdge = edge; }
+                const dBottom = Math.abs(newY + h - edge);
+                if (dBottom < bestDy) { bestDy = dBottom; snappedY = edge - h; guideYEdge = edge; }
+              }
+            }
+          }
+          effectivePatch = {
+            ...patch,
+            ...('x' in patch && { x: snappedX }),
+            ...('y' in patch && { y: snappedY }),
+          };
+          newSnapGuides = {
+            x: guideXEdge !== null ? [guideXEdge] : [],
+            y: guideYEdge !== null ? [guideYEdge] : [],
+          };
+        }
+      }
+    }
+    if (newSnapGuides !== null) setSnapGuides(newSnapGuides);
+
     setFloors(prev => prev.map(f => {
       if (f.id !== activeFloorId) return f;
-      const updatedObjects = f.objects.map(o => o.id === id ? { ...o, ...patch } : o);
+      const updatedObjects = f.objects.map(o => o.id === id ? { ...o, ...effectivePatch } : o);
       return fitFloor({ ...f, objects: updatedObjects });
     }));
   };
@@ -448,6 +505,14 @@ export default function HostPanel() {
             </TouchableOpacity>
           </ScrollView>
 
+          {/* Auto snap toggle */}
+          <TouchableOpacity style={styles.snapRow} onPress={() => setAutoSnap(prev => !prev)} activeOpacity={0.7}>
+            <View style={[styles.snapCheckbox, autoSnap && styles.snapCheckboxOn]}>
+              {autoSnap && <Ionicons name="checkmark" size={11} color="#fff" />}
+            </View>
+            <Text style={styles.snapLabel}>Auto snap objects</Text>
+          </TouchableOpacity>
+
           {/* Canvas */}
           <View style={styles.canvasWrapper} {...editPanResponder.panHandlers}>
             <View style={{ transform: [{ translateX: editPan.tx }, { translateY: editPan.ty }] }}>
@@ -458,6 +523,7 @@ export default function HostPanel() {
                 height={activeCanvasH}
                 isReadonly={false}
                 zoomEnabled={true}
+                snapGuides={autoSnap ? snapGuides : undefined}
                 onDeselect={() => setSelectedId(null)}
                 onSelect={setSelectedId}
                 onUpdate={updateObject}
@@ -877,5 +943,31 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: themeConfig.text.inverse,
+  },
+  snapRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 2,
+    marginBottom: 6,
+  },
+  snapCheckbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: themeConfig.border.subtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  snapCheckboxOn: {
+    backgroundColor: themeConfig.accent.primary,
+    borderColor: themeConfig.accent.primary,
+  },
+  snapLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: themeConfig.text.muted,
   },
 });
