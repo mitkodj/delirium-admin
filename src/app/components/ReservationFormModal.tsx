@@ -43,7 +43,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
     const [selectedTables, setSelectedTables] = useState<SelectedTable[]>([]);
     const [phone, setPhone] = useState('');
     const [comment, setComment] = useState('');
-    const [status, setStatus] = useState<ReservationStatus>(ReservationStatus.OPEN);
+    const [status, setStatus] = useState<ReservationStatus>(ReservationStatus.APPROVED);
 
     const { floors, loadLayout } = useClubData();
 

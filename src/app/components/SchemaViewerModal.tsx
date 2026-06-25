@@ -12,35 +12,36 @@ import { ReservationRow } from './ReservationRow';
 const CANVAS_W = 900;
 const CANVAS_H = 600;
 
-type Props = {
-    visible: boolean;
+type ContentProps = {
     tableColorOverrides?: Record<string, string>;
     reservations?: Reservation[];
-    onClose: () => void;
+    onClose?: () => void;
     onPressReservation: (reservation: Reservation) => void;
     onAddReservation?: (tableId: string) => void;
+    showCloseButton?: boolean;
+    inModal?: boolean;
 };
 
-export default function SchemaViewerModal({
-    visible,
+type Props = ContentProps & {
+    visible: boolean;
+    onClose: () => void;
+};
+
+export function SchemaViewerContent({
     tableColorOverrides,
     reservations,
     onClose,
     onPressReservation,
     onAddReservation,
-}: Props) {
-    const clubId = (globalThis as any).myClubs?.[0]?.id;
-    const { floors, layoutLoading, loadLayout } = useClubData();
+    showCloseButton = true,
+    inModal = false,
+}: ContentProps) {
+    const { floors, layoutLoading } = useClubData();
 
     const [activeFloorId, setActiveFloorId] = useState<string>();
     const [containerW, setContainerW] = useState(0);
     const [containerH, setContainerH] = useState(0);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!visible || !clubId) return;
-        loadLayout(clubId);
-    }, [visible]);
 
     useEffect(() => {
         if (floors.length > 0 && !activeFloorId) setActiveFloorId(floors[0].id);
@@ -59,109 +60,135 @@ export default function SchemaViewerModal({
         : undefined;
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-            <View style={styles.container}>
+        <View style={[styles.container, inModal && styles.containerModal]}>
 
-                {/* Header */}
+            {showCloseButton && (
                 <View style={styles.header}>
                     <Text style={styles.title}>Floor Plan</Text>
                     <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                         <Ionicons name="close" size={24} color={themeConfig.text.muted} />
                     </TouchableOpacity>
                 </View>
+            )}
 
-                {/* Reservation preview / add placeholder */}
-                {selectedTableId && (
-                    <View style={styles.reservationPreview}>
-                        {matched ? (
-                            <ReservationRow
-                                item={matched}
-                                onPress={() => { onClose(); onPressReservation(matched); }}
-                                onEdit={() => { onClose(); onPressReservation(matched); }}
-                            />
-                        ) : (
-                            <TouchableOpacity
-                                style={styles.addRow}
-                                onPress={() => { onClose(); onAddReservation?.(selectedTableId); }}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.addRowText}>Add reservation</Text>
-                                <Ionicons name="add-circle-outline" size={20} color={themeConfig.accent.primary} />
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                )}
-
-                {/* Floor tabs — hidden when only one floor */}
-                {floors.length > 1 && (
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.tabsScroll}
-                        contentContainerStyle={styles.tabsContent}
-                    >
-                        {floors.map(floor => (
-                            <TouchableOpacity
-                                key={floor.id}
-                                style={[styles.tab, floor.id === activeFloorId && styles.tabActive]}
-                                onPress={() => setActiveFloorId(floor.id)}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={[styles.tabLabel, floor.id === activeFloorId && styles.tabLabelActive]}>
-                                    {floor.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </ScrollView>
-                )}
-
-                {/* Canvas */}
-                <View
-                    style={styles.canvasWrapper}
-                    onLayout={e => {
-                        setContainerW(e.nativeEvent.layout.width);
-                        setContainerH(e.nativeEvent.layout.height);
-                    }}
-                >
-                    {layoutLoading && (
-                        <ActivityIndicator size="large" color={themeConfig.accent.primary} />
-                    )}
-                    {!layoutLoading && containerW > 0 && containerH > 0 && activeFloor && (
-                        <View style={{ width: containerW, height: containerH, overflow: 'hidden', backgroundColor: '#14122a', borderRadius: 12 }}>
-                            <View style={{
-                                position: 'absolute',
-                                width: canvasW,
-                                height: canvasH,
-                                left: (containerW - canvasW) / 2,
-                                top: (containerH - canvasH) / 2,
-                                transform: [{ scale }],
-                            }}>
-                                <FloorCanvas
-                                    objects={activeFloor.objects}
-                                    selectedId={selectedTableId}
-                                    width={canvasW}
-                                    height={canvasH}
-                                    isReadonly={true}
-                                    selectOnly
-
-                                    tableColorOverrides={tableColorOverrides}
-                                    onDeselect={() => setSelectedTableId(null)}
-                                    onSelect={id => setSelectedTableId(id)}
-                                    onUpdate={() => {}}
-                                    onDuplicate={() => {}}
-                                />
-                            </View>
-                        </View>
-                    )}
-                    {!layoutLoading && !activeFloor && (
-                        <View style={styles.empty}>
-                            <Ionicons name="map-outline" size={48} color={themeConfig.text.muted} />
-                            <Text style={styles.emptyText}>No floor plan available</Text>
-                        </View>
+            {selectedTableId && (
+                <View style={styles.reservationPreview}>
+                    {matched ? (
+                        <ReservationRow
+                            item={matched}
+                            onPress={() => { onClose?.(); onPressReservation(matched); }}
+                            onEdit={() => { onClose?.(); onPressReservation(matched); }}
+                        />
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.addRow}
+                            onPress={() => { onClose?.(); onAddReservation?.(selectedTableId); }}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={styles.addRowText}>Add reservation</Text>
+                            <Ionicons name="add-circle-outline" size={20} color={themeConfig.accent.primary} />
+                        </TouchableOpacity>
                     )}
                 </View>
+            )}
 
+            {floors.length > 1 && (
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.tabsScroll}
+                    contentContainerStyle={styles.tabsContent}
+                >
+                    {floors.map(floor => (
+                        <TouchableOpacity
+                            key={floor.id}
+                            style={[styles.tab, floor.id === activeFloorId && styles.tabActive]}
+                            onPress={() => setActiveFloorId(floor.id)}
+                            activeOpacity={0.7}
+                        >
+                            <Text style={[styles.tabLabel, floor.id === activeFloorId && styles.tabLabelActive]}>
+                                {floor.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            )}
+
+            <View
+                style={styles.canvasWrapper}
+                onLayout={e => {
+                    setContainerW(e.nativeEvent.layout.width);
+                    setContainerH(e.nativeEvent.layout.height);
+                }}
+            >
+                {layoutLoading && (
+                    <ActivityIndicator size="large" color={themeConfig.accent.primary} />
+                )}
+                {!layoutLoading && containerW > 0 && containerH > 0 && activeFloor && (
+                    <View style={{ width: containerW, height: containerH, overflow: 'hidden', backgroundColor: '#14122a', borderRadius: 12 }}>
+                        <View style={{
+                            position: 'absolute',
+                            width: canvasW,
+                            height: canvasH,
+                            left: (containerW - canvasW) / 2,
+                            top: (containerH - canvasH) / 2,
+                            transform: [{ scale }],
+                        }}>
+                            <FloorCanvas
+                                objects={activeFloor.objects}
+                                selectedId={selectedTableId}
+                                width={canvasW}
+                                height={canvasH}
+                                isReadonly={true}
+                                selectOnly
+
+                                tableColorOverrides={tableColorOverrides}
+                                onDeselect={() => setSelectedTableId(null)}
+                                onSelect={id => setSelectedTableId(id)}
+                                onUpdate={() => {}}
+                            />
+                        </View>
+                    </View>
+                )}
+                {!layoutLoading && !activeFloor && (
+                    <View style={styles.empty}>
+                        <Ionicons name="map-outline" size={48} color={themeConfig.text.muted} />
+                        <Text style={styles.emptyText}>No floor plan available</Text>
+                    </View>
+                )}
             </View>
+
+        </View>
+    );
+}
+
+export default function SchemaViewerModal({
+    visible,
+    tableColorOverrides,
+    reservations,
+    onClose,
+    onPressReservation,
+    onAddReservation,
+}: Props) {
+    const clubId = (globalThis as any).myClubs?.[0]?.id;
+    const { loadLayout } = useClubData();
+
+    useEffect(() => {
+        if (!visible || !clubId) return;
+        loadLayout(clubId);
+    }, [visible]);
+
+    return (
+        <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+            <SchemaViewerContent
+                tableColorOverrides={tableColorOverrides}
+                reservations={reservations}
+                onClose={onClose}
+                onPressReservation={onPressReservation}
+                onAddReservation={onAddReservation}
+                showCloseButton={true}
+                inModal={true}
+            />
         </Modal>
     );
 }
@@ -169,8 +196,10 @@ export default function SchemaViewerModal({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 55,
         backgroundColor: themeConfig.background.primary,
+    },
+    containerModal: {
+        paddingTop: 55,
     },
     header: {
         flexDirection: 'row',

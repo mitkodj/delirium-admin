@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    SectionList, RefreshControl, Platform, Modal, Pressable, Image,
+    SectionList, RefreshControl, Platform, Modal, Pressable, Image, useWindowDimensions,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Stack } from 'expo-router';
@@ -11,7 +11,7 @@ import themeConfig from '../../themes/themeConfig';
 import ReservationFormModal from '../components/ReservationFormModal';
 import ReservationDetailModal from '../components/ReservationDetailModal';
 import AddButton from '../components/AddButton';
-import SchemaViewerModal from '../components/SchemaViewerModal';
+import SchemaViewerModal, { SchemaViewerContent } from '../components/SchemaViewerModal';
 import { Reservation, ReservationStatus, DEvent } from '../../types/Disco';
 import adminStyles from './styles/adminStyles';
 import { useSidebar } from '../../providers/SidebarContext';
@@ -356,6 +356,10 @@ export default function Reservations() {
         closeModal();
     };
 
+    const { width, height } = useWindowDimensions();
+    const isTablet = width >= 768;
+    const showSplitView = isTablet && width > height;
+
     const todayMidnight = startOfDay(new Date());
     const isSelectedToday = selectedDate.getTime() === todayMidnight.getTime();
 
@@ -364,7 +368,7 @@ export default function Reservations() {
     });
 
     return (
-        <View style={[adminStyles.adminPage, styles.container]}>
+        <View style={[adminStyles.adminPage, styles.container, showSplitView && styles.splitContainer]}>
             <Stack.Screen
                 options={{
                     header: () => (
@@ -380,88 +384,108 @@ export default function Reservations() {
                 }}
             />
 
-            <SectionList
-                sections={sections}
-                keyExtractor={item => item.id}
-                renderItem={({ item }) => <ReservationRow item={item as Reservation} onPress={() => openDetail(item as Reservation)} />}
-                renderSectionHeader={({ section }) => (
-                    <SectionHeader
-                        label={section.label}
-                        accent={section.accent}
-                        count={section.count}
-                        collapsed={collapsedSections.has(section.status)}
-                        onToggle={() => toggleSection(section.status)}
-                    />
-                )}
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-                ListEmptyComponent={
-                    <View style={styles.empty}>
-                        <Ionicons name="ticket-outline" size={48} color={themeConfig.text.muted} />
-                        <Text style={styles.emptyText}>No reservations for this day</Text>
-                    </View>
-                }
-                ListHeaderComponent={
-                    <>
-                        <View style={styles.statsRow}>
-                            {stats.map(s => (
-                                <View key={s.label} style={styles.statCard}>
-                                    <Text style={styles.statValue}>{s.value}</Text>
-                                    <Text style={styles.statLabel}>{s.label}</Text>
-                                </View>
-                            ))}
+            {/* Left panel: reservation list */}
+            <View style={showSplitView ? styles.splitLeft : styles.fullWidth}>
+                <SectionList
+                    sections={sections}
+                    keyExtractor={item => item.id}
+                    renderItem={({ item }) => <ReservationRow item={item as Reservation} onPress={() => openDetail(item as Reservation)} />}
+                    renderSectionHeader={({ section }) => (
+                        <SectionHeader
+                            label={section.label}
+                            accent={section.accent}
+                            count={section.count}
+                            collapsed={collapsedSections.has(section.status)}
+                            onToggle={() => toggleSection(section.status)}
+                        />
+                    )}
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                    ListEmptyComponent={
+                        <View style={styles.empty}>
+                            <Ionicons name="ticket-outline" size={48} color={themeConfig.text.muted} />
+                            <Text style={styles.emptyText}>No reservations for this day</Text>
                         </View>
-                        <View style={styles.searchBarRow}>
-                            <View style={[styles.searchRow, styles.searchRowFlex]}>
-                                <Ionicons name="search-outline" size={16} color={themeConfig.text.muted} style={styles.searchIcon} />
-                                <TextInput
-                                    style={styles.searchInput}
-                                    placeholder="Search by name or comment..."
-                                    placeholderTextColor={themeConfig.text.muted}
-                                    value={searchQuery}
-                                    onChangeText={setSearchQuery}
-                                    returnKeyType="search"
-                                    clearButtonMode="while-editing"
-                                />
+                    }
+                    ListHeaderComponent={
+                        <>
+                            <View style={styles.statsRow}>
+                                {stats.map(s => (
+                                    <View key={s.label} style={styles.statCard}>
+                                        <Text style={styles.statValue}>{s.value}</Text>
+                                        <Text style={styles.statLabel}>{s.label}</Text>
+                                    </View>
+                                ))}
                             </View>
-                            {club?.dayTimeStart && (
-                                <TouchableOpacity
-                                    style={[styles.timeFilterBtn, timeFilter === 'day' && styles.timeFilterBtnActive]}
-                                    onPress={() => setTimeFilter(f => f === 'day' ? null : 'day')}
-                                    activeOpacity={0.7}
-                                >
-                                    <Ionicons name="sunny-outline" size={20} color={timeFilter === 'day' ? themeConfig.accent.primary : themeConfig.text.muted} />
-                                </TouchableOpacity>
-                            )}
-                            {club?.nightTimeStart && (
-                                <TouchableOpacity
-                                    style={[styles.timeFilterBtn, timeFilter === 'night' && styles.timeFilterBtnActive]}
-                                    onPress={() => setTimeFilter(f => f === 'night' ? null : 'night')}
-                                    activeOpacity={0.7}
-                                >
-                                    <Ionicons name="moon-outline" size={20} color={timeFilter === 'night' ? themeConfig.accent.primary : themeConfig.text.muted} />
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    </>
-                }
-                stickySectionHeadersEnabled={false}
-                ListFooterComponent={<View style={styles.listFooter} />}
-                style={styles.list}
-                contentContainerStyle={sections.length === 0 ? styles.listEmpty : undefined}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={handleRefresh}
-                        tintColor={themeConfig.accent.primary}
-                    />
-                }
-            />
+                            <View style={styles.searchBarRow}>
+                                <View style={[styles.searchRow, styles.searchRowFlex]}>
+                                    <Ionicons name="search-outline" size={16} color={themeConfig.text.muted} style={styles.searchIcon} />
+                                    <TextInput
+                                        style={styles.searchInput}
+                                        placeholder="Search by name or comment..."
+                                        placeholderTextColor={themeConfig.text.muted}
+                                        value={searchQuery}
+                                        onChangeText={setSearchQuery}
+                                        returnKeyType="search"
+                                        clearButtonMode="while-editing"
+                                    />
+                                </View>
+                                {club?.dayTimeStart && (
+                                    <TouchableOpacity
+                                        style={[styles.timeFilterBtn, timeFilter === 'day' && styles.timeFilterBtnActive]}
+                                        onPress={() => setTimeFilter(f => f === 'day' ? null : 'day')}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="sunny-outline" size={20} color={timeFilter === 'day' ? themeConfig.accent.primary : themeConfig.text.muted} />
+                                    </TouchableOpacity>
+                                )}
+                                {club?.nightTimeStart && (
+                                    <TouchableOpacity
+                                        style={[styles.timeFilterBtn, timeFilter === 'night' && styles.timeFilterBtnActive]}
+                                        onPress={() => setTimeFilter(f => f === 'night' ? null : 'night')}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Ionicons name="moon-outline" size={20} color={timeFilter === 'night' ? themeConfig.accent.primary : themeConfig.text.muted} />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </>
+                    }
+                    stickySectionHeadersEnabled={false}
+                    ListFooterComponent={<View style={styles.listFooter} />}
+                    style={styles.list}
+                    contentContainerStyle={sections.length === 0 ? styles.listEmpty : undefined}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={handleRefresh}
+                            tintColor={themeConfig.accent.primary}
+                        />
+                    }
+                />
 
-            {/* Open schema button */}
-            <TouchableOpacity style={[styles.actionBtn, styles.actionBtnAbsolute]} onPress={() => setSchemaVisible(true)} activeOpacity={0.85}>
-                <Ionicons name="map-outline" size={16} color={themeConfig.text.inverse} />
-                <Text style={styles.actionBtnText}>Open schema</Text>
-            </TouchableOpacity>
+                {!showSplitView && (
+                    <TouchableOpacity style={[styles.actionBtn, styles.actionBtnAbsolute]} onPress={() => setSchemaVisible(true)} activeOpacity={0.85}>
+                        <Ionicons name="map-outline" size={16} color={themeConfig.text.inverse} />
+                        <Text style={styles.actionBtnText}>Open schema</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
+
+            {/* Right panel: inline schema on tablet landscape */}
+            {showSplitView && (
+                <View style={styles.splitRight}>
+                    <SchemaViewerContent
+                        tableColorOverrides={tableColorOverrides}
+                        reservations={reservations}
+                        showCloseButton={false}
+                        onPressReservation={openDetail}
+                        onAddReservation={(tableId) => {
+                            setPreselectedTableId(tableId);
+                            setModalVisible(true);
+                        }}
+                    />
+                </View>
+            )}
 
             <ReservationDetailModal
                 reservation={detailReservation}
@@ -540,6 +564,21 @@ export default function Reservations() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+    },
+    splitContainer: {
+        flexDirection: 'row',
+    },
+    splitLeft: {
+        flex: 1,
+        borderRightWidth: 1,
+        borderRightColor: themeConfig.border.subtle,
+    },
+    fullWidth: {
+        flex: 1,
+    },
+    splitRight: {
+        flex: 1,
+        paddingTop: 12,
     },
     list: {
         flex: 1,

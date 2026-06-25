@@ -1,5 +1,5 @@
 import React from "react";
-import { TouchableOpacity, View, Text, StyleSheet } from "react-native"
+import { TouchableOpacity, View, Text, StyleSheet, useWindowDimensions } from "react-native"
 import themeConfig from "../../themes/themeConfig";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -8,15 +8,17 @@ import { useSidebar } from "../../providers/SidebarContext";
 const AdminHeader = ({ title }: { title: string }) => {
     const insets = useSafeAreaInsets();
     const { sidebarOpen, toggleSidebar } = useSidebar();
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-            {!sidebarOpen &&
+        <View style={[styles.container, { paddingTop: insets.top, paddingRight: isTablet ? 0 : 60 }]}>
+            {!sidebarOpen && !isTablet && (
                 <View style={[styles.sidePanel, { borderBottomRightRadius: 12 }]}>
                     <TouchableOpacity style={styles.iconWrapper} onPress={toggleSidebar}>
                         <Ionicons name="chevron-forward" size={22} color={themeConfig.text.muted} />
                     </TouchableOpacity>
                 </View>
-            }
+            )}
             <Text style={styles.title}>
                 {title}
             </Text>

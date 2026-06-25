@@ -3,7 +3,7 @@
     "name": "Delirium Admin",
     "slug": "Delirium Admin",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./logo-ios.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -13,11 +13,13 @@
     },
     "ios": {
       "supportsTablet": true,
+      "requiresFullScreen": true,
       "icon": "./logo-ios.png",
       "bundleIdentifier": "com.radmit.deliriumadmin",
       "infoPlist": {
         "UIViewControllerBasedStatusBarAppearance": true,
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIRequiresFullScreen": true
       }
     },
     "android": {
