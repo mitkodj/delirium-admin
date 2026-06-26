@@ -13,13 +13,17 @@ export default {
     scheme: "com.radmit.deliriumadmin",
 
     icon: "./logo-ios.png",
+    orientation: "default",
 
     ios: {
       bundleIdentifier: "com.radmit.deliriumadmin",
       icon: "./logo-ios.png",
+      supportsTablet: true,
+      requireFullScreen: true,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIViewControllerBasedStatusBarAppearance: true,
+        UIRequiresFullScreen: true,
       },
     },
 
@@ -33,6 +37,6 @@ export default {
         projectId: "cbeca8df-42bd-476e-aaa2-6e6c639a06ad",
       },
     },
-    plugins: ["expo-font"],
+    plugins: ["expo-font", "./plugins/withIpadSupport"],
   },
 };
