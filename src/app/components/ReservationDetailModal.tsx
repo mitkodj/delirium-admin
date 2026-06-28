@@ -11,6 +11,7 @@ import { useClubData } from '../../providers/ClubDataContext';
 import FloorCanvas from './floorMap/FloorCanvas';
 import { ReservationRow } from './ReservationRow';
 import { FloorObject } from '../../types/FloorMap';
+import { useTabletModalStyle } from '../../helpers/useTabletModalStyle';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -79,6 +80,7 @@ export default function ReservationDetailModal({
 }: Props) {
     const { floors } = useClubData();
     const insets = useSafeAreaInsets();
+    const tabletStyle = useTabletModalStyle();
     const scaleAnim = useRef(new Animated.Value(0.88)).current;
     const opacityAnim = useRef(new Animated.Value(0)).current;
     const translateY = useRef(new Animated.Value(0)).current;
@@ -288,12 +290,12 @@ export default function ReservationDetailModal({
     })();
 
     return (
-        <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
+        <Modal transparent visible={visible} animationType="none" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
             <View style={[styles.backdrop, { paddingTop: Math.max(20, insets.top), paddingBottom: Math.max(20, insets.bottom) }]}>
                 <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
                 <Animated.View
                     {...panResponder.panHandlers}
-                    style={[styles.card, { opacity: opacityAnim, transform: [{ scale: scaleAnim }, { translateY }] }]}
+                    style={[styles.card, tabletStyle, { opacity: opacityAnim, transform: [{ scale: scaleAnim }, { translateY }] }]}
                 >
                     {/* Drag pill + close button */}
                     <View style={styles.pillRow}>
@@ -378,7 +380,7 @@ export default function ReservationDetailModal({
                                         onDeselect={() => setHighlightedTableId(null)}
                                         onSelect={setHighlightedTableId}
                                         onUpdate={() => {}}
-                                        onDuplicate={() => {}}
+                                        // onDuplicate={() => {}}
                                     />
                                 </View>
                             </View>

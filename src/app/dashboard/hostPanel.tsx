@@ -9,6 +9,7 @@ import { postLayout } from '../../utils/service';
 import { useClubData } from '../../providers/ClubDataContext';
 import themeConfig from '../../themes/themeConfig';
 import adminStyles from './styles/adminStyles';
+import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 type Mode = 'preview' | 'edit';
 
@@ -451,8 +452,8 @@ export default function HostPanel() {
       {/* ══════════════════════════════════════════════════════════════
           Edit full-screen modal
       ══════════════════════════════════════════════════════════════ */}
-      <Modal visible={isEdit} animationType="slide" onRequestClose={cancelEdit}>
-        <View style={styles.editModal}>
+      <Modal visible={isEdit} animationType="slide" onRequestClose={cancelEdit} supportedOrientations={['portrait', 'landscape']}>
+        <TabletModalWrapper style={styles.editModal}>
 
           {/* Title row with optional date pill */}
           <View style={styles.titleRow}>
@@ -563,7 +564,7 @@ export default function HostPanel() {
           </View>
 
           {/* Date picker sub-modal */}
-          <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)}>
+          <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)} supportedOrientations={['portrait', 'landscape']}>
             <View style={styles.datePickerOverlay}>
               <View style={styles.datePickerContainer}>
                 <DateTimePicker
@@ -587,7 +588,7 @@ export default function HostPanel() {
           </Modal>
 
           {/* Floor rename sub-modal */}
-          <Modal transparent animationType="fade" visible={renamingFloorId !== null} onRequestClose={() => setRenamingFloorId(null)}>
+          <Modal transparent animationType="fade" visible={renamingFloorId !== null} onRequestClose={() => setRenamingFloorId(null)} supportedOrientations={['portrait', 'landscape']}>
             <View style={styles.renameOverlay}>
               <View style={styles.renameBox}>
                 <Text style={styles.renameTitle}>Rename Floor</Text>
@@ -622,7 +623,7 @@ export default function HostPanel() {
             </View>
           </Modal>
 
-        </View>
+        </TabletModalWrapper>
       </Modal>
 
     </View>

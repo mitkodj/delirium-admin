@@ -22,7 +22,8 @@ import MapPickerModal from './LocationSelectorModal'
 import { createEvent, updateEvent, uploadBanner, setEventsGenres } from '../../utils/service'
 import { Club, DGenre } from '../../types/Disco'
 import { buildAssetSource } from '../../helpers/utils'
-import GenreSelector from './EventGenreSelector' 
+import GenreSelector from './EventGenreSelector'
+import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 type Props = {
     visible: boolean
@@ -149,9 +150,9 @@ export default function EventFormModal({
     }
 
     return (
-        <Modal visible={visible} animationType="slide">
+        <Modal visible={visible} animationType="slide" supportedOrientations={['portrait', 'landscape']}>
 
-            <View style={styles.container}>
+            <TabletModalWrapper style={styles.container}>
 
                 <Text style={styles.title}>
                     {isEdit ? event.name : 'New Event'}
@@ -343,13 +344,14 @@ export default function EventFormModal({
 
                 </View>
 
-            </View>
+            </TabletModalWrapper>
 
             <Modal
                 transparent
                 animationType="slide"
                 visible={pickerVisible}
                 onRequestClose={() => setPickerVisible(false)}
+                supportedOrientations={['portrait', 'landscape']}
             >
                 <View style={styles.modalOverlay}>
 

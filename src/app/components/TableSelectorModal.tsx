@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import FloorCanvas from './floorMap/FloorCanvas';
 import themeConfig from '../../themes/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
+import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -94,8 +95,8 @@ export default function TableSelectorModal({
         : '';
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-            <View style={styles.container}>
+        <Modal visible={visible} animationType="slide" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+            <TabletModalWrapper style={styles.container}>
 
                 <View style={styles.header}>
                     <Text style={styles.title}>Select Tables{peopleLabel}</Text>
@@ -160,7 +161,7 @@ export default function TableSelectorModal({
                                     onDeselect={() => {}}
                                     onSelect={handleSelect}
                                     onUpdate={() => {}}
-                                    onDuplicate={() => {}}
+                                    // onDuplicate={() => {}}
                                 />
                             </View>
                         </View>
@@ -180,7 +181,7 @@ export default function TableSelectorModal({
                     </TouchableOpacity>
                 </View>
 
-            </View>
+            </TabletModalWrapper>
         </Modal>
     );
 }

@@ -18,6 +18,7 @@ import themeConfig from '../themes/themeConfig';
 import { getMyClubs, login } from '../utils/service';
 import { saveSession } from '../utils/session';
 import { useSearchFilters } from '../providers/SearchCriteriaContext';
+import { TabletModalWrapper } from '../helpers/useTabletModalStyle';
 
 export default function LoginScreen() {
 
@@ -120,8 +121,8 @@ export default function LoginScreen() {
 
             </KeyboardAvoidingView>
 
-            <Modal visible={privacyVisible} animationType="slide" onRequestClose={() => setPrivacyVisible(false)}>
-                <View style={styles.privacyModal}>
+            <Modal visible={privacyVisible} animationType="slide" onRequestClose={() => setPrivacyVisible(false)} supportedOrientations={['portrait', 'landscape']}>
+                <TabletModalWrapper style={styles.privacyModal}>
                     <View style={styles.privacyHeader}>
                         <Text style={styles.privacyTitle}>Privacy Policy</Text>
                         <TouchableOpacity onPress={() => setPrivacyVisible(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
@@ -179,7 +180,7 @@ export default function LoginScreen() {
 
                         <View style={styles.privacyFooterSpacer} />
                     </ScrollView>
-                </View>
+                </TabletModalWrapper>
             </Modal>
         </>
     );

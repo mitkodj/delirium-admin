@@ -63,7 +63,7 @@ export default function MapPickerModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide">
+    <Modal visible={visible} animationType="slide" supportedOrientations={['portrait', 'landscape']}>
       <View style={{ flex: 1 }}>
         <MapView
           style={{ flex: 1 }}

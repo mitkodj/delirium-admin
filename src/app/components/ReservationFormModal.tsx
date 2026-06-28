@@ -18,6 +18,7 @@ import { createReservation, updateReservation, fetchContactsByPhone, CreateReser
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import TableSelectorModal from './TableSelectorModal';
+import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 const PHONE_RE = /^\+?[\d\s\-().]{7,20}$/;
 
@@ -230,8 +231,8 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
     };
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
-            <View style={styles.container}>
+        <Modal visible={visible} animationType="slide" onRequestClose={handleClose} supportedOrientations={['portrait', 'landscape']}>
+            <TabletModalWrapper style={styles.container}>
 
                 <Text style={styles.title}>{isEdit ? 'Edit Reservation' : 'New Reservation'}</Text>
 
@@ -444,11 +445,11 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
                     </TouchableOpacity>
                 </View>
 
-            </View>
+            </TabletModalWrapper>
 
             {/* Date picker */}
             {Platform.OS === 'ios' ? (
-                <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)}>
+                <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)} supportedOrientations={['portrait', 'landscape']}>
                     <View style={styles.pickerOverlay}>
                         <View style={styles.pickerContainer}>
                             <DateTimePicker value={date} mode="date" display="inline" onChange={mergeDate} themeVariant="dark" style={styles.picker} />
@@ -464,7 +465,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
 
             {/* Time picker */}
             {Platform.OS === 'ios' ? (
-                <Modal transparent animationType="slide" visible={showTimePicker} onRequestClose={() => setShowTimePicker(false)}>
+                <Modal transparent animationType="slide" visible={showTimePicker} onRequestClose={() => setShowTimePicker(false)} supportedOrientations={['portrait', 'landscape']}>
                     <View style={styles.pickerOverlay}>
                         <View style={styles.pickerContainer}>
                             <DateTimePicker value={date} mode="time" display="spinner" onChange={mergeTime} themeVariant="dark" style={styles.picker} />

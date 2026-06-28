@@ -8,6 +8,7 @@ import themeConfig from '../../themes/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation } from '../../types/Disco';
 import { ReservationRow } from './ReservationRow';
+import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -60,7 +61,7 @@ export function SchemaViewerContent({
         : undefined;
 
     return (
-        <View style={[styles.container, inModal && styles.containerModal]}>
+        <TabletModalWrapper style={[styles.container, inModal && styles.containerModal]}>
 
             {showCloseButton && (
                 <View style={styles.header}>
@@ -158,7 +159,7 @@ export function SchemaViewerContent({
                 )}
             </View>
 
-        </View>
+        </TabletModalWrapper>
     );
 }
 
@@ -179,7 +180,7 @@ export default function SchemaViewerModal({
     }, [visible]);
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
+        <Modal visible={visible} animationType="slide" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
             <SchemaViewerContent
                 tableColorOverrides={tableColorOverrides}
                 reservations={reservations}

@@ -526,7 +526,7 @@ export default function Reservations() {
                 }}
             />
 
-            <Modal transparent visible={datePickerVisible} animationType="fade" onRequestClose={() => setDatePickerVisible(false)}>
+            <Modal transparent visible={datePickerVisible} animationType="fade" onRequestClose={() => setDatePickerVisible(false)} supportedOrientations={['portrait', 'landscape']}>
                 <Pressable style={styles.datePickerBackdrop} onPress={() => setDatePickerVisible(false)}>
                     <View style={styles.datePickerCard}>
                         {currentEvent?.banner ? (

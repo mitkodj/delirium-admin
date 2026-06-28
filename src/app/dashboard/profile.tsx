@@ -356,6 +356,7 @@ export default function Profile() {
                     animationType="slide"
                     visible={activeTimePicker !== null}
                     onRequestClose={() => setActiveTimePicker(null)}
+                    supportedOrientations={['portrait', 'landscape']}
                 >
                     <View style={styles.pickerOverlay}>
                         <View style={styles.pickerContainer}>
