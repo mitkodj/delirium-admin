@@ -95,7 +95,7 @@ export default function TableSelectorModal({
         : '';
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
             <TabletModalWrapper style={styles.container}>
 
                 <View style={styles.header}>

@@ -452,7 +452,7 @@ export default function HostPanel() {
       {/* ══════════════════════════════════════════════════════════════
           Edit full-screen modal
       ══════════════════════════════════════════════════════════════ */}
-      <Modal visible={isEdit} animationType="slide" onRequestClose={cancelEdit} supportedOrientations={['portrait', 'landscape']}>
+      <Modal visible={isEdit} animationType="slide" transparent onRequestClose={cancelEdit} supportedOrientations={['portrait', 'landscape']}>
         <TabletModalWrapper style={styles.editModal}>
 
           {/* Title row with optional date pill */}

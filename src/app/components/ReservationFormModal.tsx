@@ -231,7 +231,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
     };
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={handleClose} supportedOrientations={['portrait', 'landscape']}>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose} supportedOrientations={['portrait', 'landscape']}>
             <TabletModalWrapper style={styles.container}>
 
                 <Text style={styles.title}>{isEdit ? 'Edit Reservation' : 'New Reservation'}</Text>

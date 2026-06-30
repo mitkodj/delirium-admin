@@ -31,13 +31,13 @@ export function TabletModalWrapper({ style, children }: {
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(100,100,100,0.1)',
+        backgroundColor: 'rgba(0,0,0,0.2)',
         alignItems: 'center',
     },
     content: {
         flex: 1,
         maxWidth: PHONE_WIDTH,
-        width: '100%',
+        width: PHONE_WIDTH,
         alignSelf: 'center' as const,
     },
 });

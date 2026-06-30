@@ -180,7 +180,7 @@ export default function SchemaViewerModal({
     }, [visible]);
 
     return (
-        <Modal visible={visible} animationType="slide" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
             <SchemaViewerContent
                 tableColorOverrides={tableColorOverrides}
                 reservations={reservations}

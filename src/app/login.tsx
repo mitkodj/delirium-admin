@@ -121,7 +121,7 @@ export default function LoginScreen() {
 
             </KeyboardAvoidingView>
 
-            <Modal visible={privacyVisible} animationType="slide" onRequestClose={() => setPrivacyVisible(false)} supportedOrientations={['portrait', 'landscape']}>
+            <Modal visible={privacyVisible} animationType="slide" transparent onRequestClose={() => setPrivacyVisible(false)} supportedOrientations={['portrait', 'landscape']}>
                 <TabletModalWrapper style={styles.privacyModal}>
                     <View style={styles.privacyHeader}>
                         <Text style={styles.privacyTitle}>Privacy Policy</Text>

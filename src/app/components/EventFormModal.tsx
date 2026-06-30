@@ -150,7 +150,7 @@ export default function EventFormModal({
     }
 
     return (
-        <Modal visible={visible} animationType="slide" supportedOrientations={['portrait', 'landscape']}>
+        <Modal visible={visible} animationType="slide" transparent supportedOrientations={['portrait', 'landscape']}>
 
             <TabletModalWrapper style={styles.container}>
 
