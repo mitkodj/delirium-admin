@@ -756,6 +756,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
+        alignItems: 'center',
     },
     picker: { width: '100%' },
     pickerDone: {

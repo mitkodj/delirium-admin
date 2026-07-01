@@ -13,6 +13,8 @@ import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 const CANVAS_W = 900;
 const CANVAS_H = 600;
 
+const TABLE_TYPES = new Set(['table_circle', 'table_vip_rect']);
+
 type ContentProps = {
     tableColorOverrides?: Record<string, string>;
     reservations?: Reservation[];
@@ -48,6 +50,7 @@ export function SchemaViewerContent({
         if (floors.length > 0 && !activeFloorId) setActiveFloorId(floors[0].id);
     }, [floors]);
 
+    const allObjects = floors.flatMap(f => f.objects);
     const activeFloor = floors.find(f => f.id === activeFloorId) ?? floors[0];
     const canvasW = activeFloor?.width ?? CANVAS_W;
     const canvasH = activeFloor?.height ?? CANVAS_H;
@@ -145,7 +148,10 @@ export function SchemaViewerContent({
 
                                 tableColorOverrides={tableColorOverrides}
                                 onDeselect={() => setSelectedTableId(null)}
-                                onSelect={id => setSelectedTableId(id)}
+                                onSelect={id => {
+                                    const obj = allObjects.find(o => o.id === id);
+                                    setSelectedTableId(obj && TABLE_TYPES.has(obj.type) ? id : null);
+                                }}
                                 onUpdate={() => {}}
                             />
                         </View>

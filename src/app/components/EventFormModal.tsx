@@ -164,7 +164,7 @@ export default function EventFormModal({
                     </View>
                 )}
 
-                <ScrollView>
+                <ScrollView keyboardDismissMode="on-drag">
                     <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
 
                         {banner ? (
