@@ -114,7 +114,7 @@ export default function LoginScreen() {
                     <View style={styles.loadingOverlay}>
                         <ActivityIndicator size="large" color="#fff" />
                         <Text style={styles.loadingText}>
-                            Loading your dashboard...
+                            Logging you in...
                         </Text>
                     </View>
                 )}

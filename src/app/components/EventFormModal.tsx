@@ -78,7 +78,7 @@ export default function EventFormModal({
             setBannerChanged(false)
             setLocation(event.location ?? { ...club?.location, address: club?.locationNormalized })
             if (event.date) setDate(new Date(event.date))
-            if (event.genres?.length) setGenres(event.genres)
+            if (event.genres?.length) setGenres(event.genres.map((g: string) => ({ id: g })))
         }
     }, [event])
 
@@ -113,7 +113,7 @@ export default function EventFormModal({
                 eventId = event.id
             } else {
                 const resp = await createEvent({ ...eventPayload, id: '' })
-                eventId = resp.data
+                eventId = resp?.data
             }
 
             // 3️⃣ sync genres

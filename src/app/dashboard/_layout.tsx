@@ -66,7 +66,7 @@ function DashboardContent() {
         <Animated.View style={[
           styles.sidebar,
           { paddingTop: insets.top, width: isTablet ? 180 : sidebarWidth },
-          isTablet && styles.sidebarTablet,
+          styles.sidebarTablet,
         ]}>
 
           {/* TOP: toggle (phone only) + reservations */}

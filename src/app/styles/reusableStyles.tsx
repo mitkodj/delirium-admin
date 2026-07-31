@@ -18,6 +18,7 @@ const styles = StyleSheet.create({
         backgroundColor: themeConfig.background.primary,
         justifyContent: 'center',
         alignItems: 'center',
+        height: 120
     },
 
     squareImage: {

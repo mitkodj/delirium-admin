@@ -62,6 +62,8 @@ export default function GenreSelector({ accentColor, genres: propGenres, value, 
         onChange(value.filter(g => g.id !== genre.id))
     }
 
+    const displayGenres = value.map(g => genres.find(genre => genre.id === g.id)).filter(Boolean) as DGenre[]
+
     return (
         <View style={styles.wrapper}>
 
@@ -71,7 +73,7 @@ export default function GenreSelector({ accentColor, genres: propGenres, value, 
             {/* Selected pills */}
             {value.length > 0 && (
                 <View style={styles.pillsRow}>
-                    {value.map(genre => (
+                    {displayGenres.map(genre => (
                         <View
                             key={genre.id}
                             style={[styles.pill, { backgroundColor: accentColor + '22', borderColor: accentColor }]}
