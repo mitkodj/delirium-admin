@@ -48,14 +48,18 @@ export async function loadSession(): Promise<AuthSession | null> {
 export async function refreshSession(): Promise<AuthSession | null> {
     try {
         const stored = await getStoredSession();
+        console.log('refreshSession', stored);
         if (!stored?.refreshToken) return null;
+        console.log('refreshSession1', stored.refreshToken);
 
         const res = await axios.post(`${partyService}/api/auth/refresh`, {
             refreshToken: stored.refreshToken,
         });
 
+        console.log('refreshSession2', res.data);
         return await saveSession(res.data as { accessToken: string; refreshToken: string; expiresIn: number });
     } catch {
+        console.log('Failed to refresh session, clearing stored session');
         await clearSession();
         return null;
     }
@@ -76,8 +80,10 @@ export function registerRefreshInterceptor(): void {
         res => res,
         async error => {
             const original = error.config;
-            if (error.response?.status === 401 && !original._retried) {
+            const isRefreshCall = original?.url?.includes('api/auth/refresh');
+            if (error.response?.status === 401 && !original._retried && !isRefreshCall) {
                 original._retried = true;
+                console.log('Attempting to refresh session due to 401 response');
                 const session = await refreshSession();
                 if (session) {
                     original.headers['Authorization'] = `Bearer ${session.accessToken}`;
