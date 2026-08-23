@@ -46,7 +46,7 @@ export default function EventFormModal({
     const [entrance, setEntrance] = useState('')
     const [description, setDescription] = useState('')
     const [promotions, setPromotions] = useState('')
-    const [banner, setBanner] = useState<string | null>(null)
+    const [banner, setBanner] = useState<{uri: string, headers?: {[key: string]: string}} | null>(null)
     const [location, setLocation] = useState<any>({
         ...club?.location,
         address: club?.locationNormalized
@@ -74,7 +74,7 @@ export default function EventFormModal({
             setEntrance(event.entranceFee ?? '')
             setDescription(event.description ?? '')
             setPromotions(event.promotions ?? '')
-            setBanner(event.banner ?? null)
+            setBanner(buildAssetSource(event.banner) ?? null)
             setBannerChanged(false)
             setLocation(event.location ?? { ...club?.location, address: club?.locationNormalized })
             if (event.date) setDate(new Date(event.date))
@@ -90,8 +90,8 @@ export default function EventFormModal({
 
             // 1️⃣ upload banner only if the user picked a new image
             const bannerFileName = bannerChanged
-                ? (await uploadBanner(banner) as any).data.fileName
-                : banner
+                ? (await uploadBanner(banner.uri) as any).data.fileName
+                : banner.uri
 
             const eventPayload = {
                 name,
@@ -144,7 +144,7 @@ export default function EventFormModal({
                 return
             }
 
-            setBanner(asset.uri)
+            setBanner({ uri: asset.uri })
             setBannerChanged(true)
         }
     }
@@ -169,7 +169,7 @@ export default function EventFormModal({
 
                         {banner ? (
                             <>
-                                <Image source={{ uri: banner }} style={styles.bannerImage} />
+                                <Image source={banner} style={styles.bannerImage} resizeMode="contain" />
 
                                 {uploading && (
                                     <View style={styles.uploadOverlay}>
@@ -448,6 +448,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 1,
         borderColor: themeConfig.border.subtle,
+        backgroundColor: themeConfig.background.secondary,
+        overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16

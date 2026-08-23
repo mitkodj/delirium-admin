@@ -12,16 +12,16 @@ export default function RootLayout() {
                 <SearchCriteriaProvider>
                     <Stack
                         screenOptions={{
-                            headerStyle: { backgroundColor: 'transparent' },
-                            headerTintColor: '#fff',
-                            headerTitleStyle: { fontWeight: 'bold' },
+                            // headerStyle: { backgroundColor: 'transparent' },
+                            // headerTintColor: '#fff',
+                            // headerTitleStyle: { fontWeight: 'bold' },
                             animation: 'slide_from_right',
                             statusBarStyle: 'light',
                             statusBarTranslucent: true,
                         }}
                     >
                         <Stack.Screen name="index" options={{ headerShown: false }} />
-                        <Stack.Screen name="login" />
+                        <Stack.Screen name="login" options={{ headerShown: false }} />
                         <Stack.Screen name="dashboard" options={{ headerShown: false }} />
                     </Stack>
                 </SearchCriteriaProvider>
