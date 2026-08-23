@@ -48,18 +48,14 @@ export async function loadSession(): Promise<AuthSession | null> {
 export async function refreshSession(): Promise<AuthSession | null> {
     try {
         const stored = await getStoredSession();
-        console.log('refreshSession', stored);
         if (!stored?.refreshToken) return null;
-        console.log('refreshSession1', stored.refreshToken);
 
         const res = await axios.post(`${partyService}/api/auth/refresh`, {
             refreshToken: stored.refreshToken,
         });
 
-        console.log('refreshSession2', res.data);
         return await saveSession(res.data as { accessToken: string; refreshToken: string; expiresIn: number });
     } catch {
-        console.log('Failed to refresh session, clearing stored session');
         await clearSession();
         return null;
     }
