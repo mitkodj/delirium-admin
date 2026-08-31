@@ -27,7 +27,7 @@ export async function saveSession(data: {
     return session;
 }
 
-async function getStoredSession(): Promise<AuthSession | null> {
+export async function getStoredSession(): Promise<AuthSession | null> {
     try {
         const raw = await SecureStore.getItemAsync(SESSION_KEY);
         if (!raw) return null;

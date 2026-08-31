@@ -2,9 +2,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import EventsTable from '../components/EventsTable';
 import themeConfig from '../../themes/themeConfig';
 import { Club, DEvent } from '../../types/Disco';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchFilters } from '../../providers/SearchCriteriaContext';
-import { fetchEvents } from '../../utils/service';
+import { fetchEvents, fetchStatistics } from '../../utils/service';
 import React from 'react';
 import adminStyles from './styles/adminStyles';
 import { Stack } from 'expo-router';
@@ -27,11 +27,30 @@ export default function DashboardHome() {
       }
   }, []);
 
-  const metrics = [
-    { label: 'Event Visits', value: 134 },
-    { label: 'Reserve Clicks', value: 23 },
-    { label: 'Views', value: '25k' },
-  ];
+  const [metrics, setMetrics] = useState([
+    { label: 'Event Visits', value: 0 },
+    { label: 'Reserves', value: 0 },
+    { label: 'Views', value: 0 },
+  ]);
+
+  useEffect(() => {
+    fetchStatistics(club?.id).then((response) => {
+      const stats = response?.data?.[0];
+      if (stats) {
+        setMetrics([
+          { label: 'Event Visits', value: stats.eventOpenCount },
+          { label: 'Reserves', value: stats.reservationButtonClickCount },
+          { label: 'Views', value: stats.nearbyEventReturnCount },
+        ]);
+      } else {
+        setMetrics([
+          { label: 'Event Visits', value: 0 },
+          { label: 'Reserves', value: 0 },
+          { label: 'Views', value: 0 },
+        ]);
+      }
+    });
+  }, []);
 
   return (
     <View style={adminStyles.adminPage}>

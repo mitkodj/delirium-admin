@@ -4,6 +4,7 @@ import { WizardState } from "../types/WizardTypes";
 import { buildODataQuery, eq, ge, le, and } from "./oDataQueryBuilder";
 import Constants from "expo-constants";
 import { DEvent } from "../types/Disco";
+import { getStoredSession } from "./session";
 
 const config = Constants.expoConfig?.extra?.default;
 
@@ -82,6 +83,17 @@ export const fetchEvents = async (filters: WizardState, top: number, skip: numbe
     return await axios.get(`${partyService}/api/events`);
   } catch (e) {
     console.log('fetchEvents error', e);
+    return null;
+  }
+};
+
+export const fetchStatistics = async (discoId: string) => {
+  try {
+    return await axios.get(`${partyService}/api/statistics/discos/${discoId}`, {
+      headers: authHeader()
+    });
+  } catch (e) {
+    console.log('fetchStatistics error', e);
     return null;
   }
 };
@@ -231,9 +243,10 @@ export const login = async (email: string, password: string) => {
 
 export const logout = async () => {
   try {
-    await axios.post(`${partyService}/api/auth/logout`, {}, { headers: authHeader() });
+    const session = await getStoredSession();
+    await axios.post(`${partyService}/api/auth/logout`, { refreshToken: session?.refreshToken }, { headers: authHeader() });
   } catch (e) {
-    console.log('logout error', e);
+    console.log('logout error', e, JSON.stringify(e));
   }
 };
 
