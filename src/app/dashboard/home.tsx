@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import EventsTable from '../components/EventsTable';
+import EventFormModal from '../components/EventFormModal';
 import themeConfig from '../../themes/themeConfig';
 import { Club, DEvent } from '../../types/Disco';
 import { useEffect, useState } from 'react';
@@ -19,6 +20,12 @@ export default function DashboardHome() {
       return events?.data as any;
   };
 
+  const handleRefresh = async (): Promise<void> => {
+      return fetchEventsData().then((eventsData) => {
+          setEvents(eventsData);
+      });
+  };
+
   useEffect(() => {
       if (events.length === 0) {
           fetchEventsData().then((eventsData) => {
@@ -26,6 +33,19 @@ export default function DashboardHome() {
           });
       }
   }, []);
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<DEvent | null>(null);
+
+  const openEdit = (event: DEvent) => {
+      setEditingEvent(event);
+      setModalVisible(true);
+  };
+
+  const closeModal = () => {
+      setModalVisible(false);
+      setEditingEvent(null);
+  };
 
   const [metrics, setMetrics] = useState([
     { label: 'Event Visits', value: 0 },
@@ -80,9 +100,19 @@ export default function DashboardHome() {
         page={0}
         itemsPerPage={5}
         totalItems={5}
-        onPageChange={() => { } } handleRefresh={function (): Promise<any> {
-          throw new Error('Function not implemented.');
-        } }  />
+        onPageChange={() => { }}
+        handleRefresh={handleRefresh}
+        onEdit={openEdit}
+      />
+
+      <EventFormModal
+        visible={modalVisible}
+        event={editingEvent ?? undefined}
+        onClose={closeModal}
+        onSave={(data) => {
+          handleRefresh();
+        }}
+      />
     </View>
   );
 }
