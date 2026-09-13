@@ -4,6 +4,8 @@ import {
     SectionList, RefreshControl, Platform, Modal, Pressable, Image, useWindowDimensions,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { scheduleOnRN } from 'react-native-worklets';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -284,6 +286,17 @@ export default function Reservations() {
             return d;
         });
 
+    const swipeDayGesture = Gesture.Pan()
+        .activeOffsetX([-20, 20])
+        .failOffsetY([-10, 10])
+        .onEnd((event) => {
+            if (event.translationX <= -50) {
+                scheduleOnRN(shiftDay, 1);
+            } else if (event.translationX >= 50) {
+                scheduleOnRN(shiftDay, -1);
+            }
+        });
+
     const openDetail = (item: Reservation) => {
         setDetailReservation(item);
         setDetailVisible(true);
@@ -386,6 +399,7 @@ export default function Reservations() {
 
             {/* Left panel: reservation list */}
             <View style={showSplitView ? styles.splitLeft : styles.fullWidth}>
+                <GestureDetector gesture={swipeDayGesture}>
                 <SectionList
                     keyboardDismissMode="on-drag"
                     sections={sections}
@@ -463,6 +477,7 @@ export default function Reservations() {
                         />
                     }
                 />
+                </GestureDetector>
 
                 {!showSplitView && (
                     <TouchableOpacity style={[styles.actionBtn, styles.actionBtnAbsolute]} onPress={() => setSchemaVisible(true)} activeOpacity={0.85}>
