@@ -39,6 +39,7 @@ export default function AdminTable({
   return (
     <View style={styles.container}>
       <ScrollView
+        keyboardDismissMode="on-drag"
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}

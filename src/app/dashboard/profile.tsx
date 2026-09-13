@@ -167,7 +167,7 @@ export default function Profile() {
                 </View>
             )}
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardDismissMode="on-drag">
 
                 {/* Banner */}
                 <TouchableOpacity style={styles.bannerPicker} onPress={pickBanner} activeOpacity={0.85}>

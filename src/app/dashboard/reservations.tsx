@@ -387,6 +387,7 @@ export default function Reservations() {
             {/* Left panel: reservation list */}
             <View style={showSplitView ? styles.splitLeft : styles.fullWidth}>
                 <SectionList
+                    keyboardDismissMode="on-drag"
                     sections={sections}
                     keyExtractor={item => item.id}
                     renderItem={({ item }) => <ReservationRow item={item as Reservation} onPress={() => openDetail(item as Reservation)} />}
