@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet } from 'react-native';
 import EventsTable from '../components/EventsTable';
 import EventFormModal from '../components/EventFormModal';
+import AdminHeader from '../components/AdminHeader';
 import themeConfig from '../../themes/themeConfig';
 import { Club, DEvent } from '../../types/Disco';
 import { useEffect, useState } from 'react';
@@ -74,6 +75,7 @@ export default function DashboardHome() {
 
   return (
     <View style={adminStyles.adminPage}>
+      <Stack.Screen options={{ header: () => <AdminHeader title="" /> }} />
       <Text style={styles.title}>Hello, {club?.name}</Text>
 
       <View style={styles.actionsRow}>
