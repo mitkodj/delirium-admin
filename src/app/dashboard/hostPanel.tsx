@@ -575,7 +575,6 @@ export default function HostPanel() {
                     if (Platform.OS === 'android') setShowDatePicker(false);
                   }}
                   themeVariant="dark"
-                  style={styles.datePicker}
                 />
                 {Platform.OS === 'ios' && (
                   <TouchableOpacity style={styles.datePickerDone} onPress={() => setShowDatePicker(false)} activeOpacity={0.8}>
@@ -854,8 +853,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     width: '100%',
+    alignItems: 'center',
   },
-  datePicker: { width: '100%' },
   datePickerDone: {
     marginTop: 12,
     alignSelf: 'center',

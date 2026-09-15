@@ -362,7 +362,6 @@ export default function EventFormModal({
                             display={Platform.OS === 'ios' ? 'inline' : 'default'}
                             onChange={onChange}
                             themeVariant="dark"
-                            style={styles.picker}
                         />
                         {Platform.OS === 'ios' && (
                             <TouchableOpacity
@@ -519,11 +518,8 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
         width: '100%',
-        paddingHorizontal: 20
-    },
-
-    picker: {
-        width: '100%',
+        paddingHorizontal: 20,
+        alignItems: 'center',
     },
 
     doneButton: {

@@ -452,7 +452,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
                 <Modal transparent animationType="slide" visible={showDatePicker} onRequestClose={() => setShowDatePicker(false)} supportedOrientations={['portrait', 'landscape']}>
                     <View style={styles.pickerOverlay}>
                         <View style={styles.pickerContainer}>
-                            <DateTimePicker value={date} mode="date" display="inline" onChange={mergeDate} themeVariant="dark" style={styles.picker} />
+                            <DateTimePicker value={date} mode="date" display="inline" onChange={mergeDate} themeVariant="dark" />
                             <TouchableOpacity style={styles.pickerDone} onPress={() => setShowDatePicker(false)}>
                                 <Text style={styles.pickerDoneText}>Done</Text>
                             </TouchableOpacity>
@@ -468,7 +468,7 @@ export default function ReservationFormModal({ visible, reservation, initialTabl
                 <Modal transparent animationType="slide" visible={showTimePicker} onRequestClose={() => setShowTimePicker(false)} supportedOrientations={['portrait', 'landscape']}>
                     <View style={styles.pickerOverlay}>
                         <View style={styles.pickerContainer}>
-                            <DateTimePicker value={date} mode="time" display="spinner" onChange={mergeTime} themeVariant="dark" style={styles.picker} />
+                            <DateTimePicker value={date} mode="time" display="spinner" onChange={mergeTime} themeVariant="dark" />
                             <TouchableOpacity style={styles.pickerDone} onPress={() => setShowTimePicker(false)}>
                                 <Text style={styles.pickerDoneText}>Done</Text>
                             </TouchableOpacity>
@@ -758,7 +758,6 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 16,
         alignItems: 'center',
     },
-    picker: { width: '100%' },
     pickerDone: {
         marginTop: 12,
         alignSelf: 'center',

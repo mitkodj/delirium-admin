@@ -366,7 +366,6 @@ export default function Profile() {
                                 display="spinner"
                                 onChange={handleTimePick}
                                 themeVariant="dark"
-                                style={{ width: '100%' }}
                             />
                             <TouchableOpacity style={styles.pickerDone} onPress={() => setActiveTimePicker(null)}>
                                 <Text style={styles.pickerDoneText}>Done</Text>
@@ -625,6 +624,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderTopLeftRadius: 16,
         borderTopRightRadius: 16,
+        alignItems: 'center',
     },
     pickerDone: {
         marginTop: 12,
