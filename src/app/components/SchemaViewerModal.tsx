@@ -8,7 +8,6 @@ import themeConfig from '../../themes/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation } from '../../types/Disco';
 import { ReservationRow } from './ReservationRow';
-import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -64,7 +63,7 @@ export function SchemaViewerContent({
         : undefined;
 
     return (
-        <TabletModalWrapper style={[styles.container, inModal && styles.containerModal]}>
+        <View style={[styles.container, inModal && styles.containerModal]}>
 
             {showCloseButton && (
                 <View style={styles.header}>
@@ -165,7 +164,7 @@ export function SchemaViewerContent({
                 )}
             </View>
 
-        </TabletModalWrapper>
+        </View>
     );
 }
 

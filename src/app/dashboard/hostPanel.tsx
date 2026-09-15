@@ -9,7 +9,6 @@ import { postLayout } from '../../utils/service';
 import { useClubData } from '../../providers/ClubDataContext';
 import themeConfig from '../../themes/themeConfig';
 import adminStyles from './styles/adminStyles';
-import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
 
 type Mode = 'preview' | 'edit';
 
@@ -453,7 +452,7 @@ export default function HostPanel() {
           Edit full-screen modal
       ══════════════════════════════════════════════════════════════ */}
       <Modal visible={isEdit} animationType="slide" transparent onRequestClose={cancelEdit} supportedOrientations={['portrait', 'landscape']}>
-        <TabletModalWrapper style={styles.editModal}>
+        <View style={styles.editModal}>
 
           {/* Title row with optional date pill */}
           <View style={styles.titleRow}>
@@ -623,7 +622,7 @@ export default function HostPanel() {
             </View>
           </Modal>
 
-        </TabletModalWrapper>
+        </View>
       </Modal>
 
     </View>
