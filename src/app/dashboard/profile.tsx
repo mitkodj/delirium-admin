@@ -410,6 +410,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     bannerPicker: {
+        width: '100%',
+        maxWidth: 420,
+        alignSelf: 'center',
         aspectRatio: 1,
         borderRadius: 14,
         overflow: 'hidden',
