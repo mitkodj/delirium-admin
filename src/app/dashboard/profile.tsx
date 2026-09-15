@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     bannerPicker: {
         width: '100%',
         maxWidth: 420,
-        alignSelf: 'center',
+        alignSelf: 'center',//might remove if the image is rendered wrongly in the middle of the screen
         aspectRatio: 1,
         borderRadius: 14,
         overflow: 'hidden',
