@@ -19,6 +19,7 @@ interface Props {
   snapGuides?: { x: number[]; y: number[] };
   tableColorOverrides?: Record<string, string>;
   pulsingTableIds?: string[];
+  onZoomChange?: (scale: number) => void;
   dimmedTableId?: string;
   onDeselect: () => void;
   onSelect: (id: string) => void;
@@ -38,7 +39,7 @@ function getMidpoint(t: Touch2[]) {
 }
 
 export default function FloorCanvas({
-  objects, selectedId, width, height, isReadonly, selectOnly, zoomEnabled: zoomEnabledProp, snapGuides, tableColorOverrides, pulsingTableIds, dimmedTableId, onDeselect, onSelect, onUpdate,
+  objects, selectedId, width, height, isReadonly, selectOnly, zoomEnabled: zoomEnabledProp, snapGuides, tableColorOverrides, pulsingTableIds, dimmedTableId, onZoomChange, onDeselect, onSelect, onUpdate,
 }: Props) {
   const vLines = Math.floor(width  / GRID_SIZE);
   const hLines = Math.floor(height / GRID_SIZE);
@@ -103,6 +104,7 @@ export default function FloorCanvas({
         liveTx.current    = newTx;
         liveTy.current    = newTy;
         setView({ scale: newScale, tx: newTx, ty: newTy });
+        onZoomChange?.(newScale);
         lastLoc.current = null; // keep anchor stale so 2→1 transition re-initialises
 
       } else if (touches.length === 1) {

@@ -8,6 +8,8 @@ import themeConfig from '../../theme/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation } from '../../types/Disco';
 import { ReservationRow } from '../reservations/ReservationRow';
+import TableDragTooltip from './TableDragTooltip';
+import { useTableReassignDrag } from '../../hooks/useTableReassignDrag';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;
@@ -20,6 +22,7 @@ type ContentProps = {
     onClose?: () => void;
     onPressReservation: (reservation: Reservation) => void;
     onAddReservation?: (tableId: string) => void;
+    onMoveReservation?: (reservation: Reservation, fromId: string, toId: string) => void;
     showCloseButton?: boolean;
     inModal?: boolean;
 };
@@ -35,6 +38,7 @@ export function SchemaViewerContent({
     onClose,
     onPressReservation,
     onAddReservation,
+    onMoveReservation,
     showCloseButton = true,
     inModal = false,
 }: ContentProps) {
@@ -44,6 +48,7 @@ export function SchemaViewerContent({
     const [containerW, setContainerW] = useState(0);
     const [containerH, setContainerH] = useState(0);
     const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+    const [zoomed, setZoomed] = useState(false);
 
     useEffect(() => {
         if (floors.length > 0 && !activeFloorId) setActiveFloorId(floors[0].id);
@@ -57,6 +62,24 @@ export function SchemaViewerContent({
     const scale = containerW > 0 && containerH > 0
         ? Math.min(containerW / canvasW, containerH / canvasH)
         : 1;
+
+    const selectTable = (id: string) => {
+        const obj = allObjects.find(o => o.id === id);
+        setSelectedTableId(obj && TABLE_TYPES.has(obj.type) ? id : null);
+    };
+
+    const reassign = useTableReassignDrag({
+        objects: activeFloor?.objects ?? [],
+        reservations,
+        canvasW,
+        canvasH,
+        containerW,
+        containerH,
+        scale,
+        enabled: !!onMoveReservation && !zoomed,
+        onTapTable: selectTable,
+        onMove: (reservation, fromId, toId) => onMoveReservation?.(reservation, fromId, toId),
+    });
 
     const matched = selectedTableId
         ? reservations?.find(r => r.tables?.includes(selectedTableId))
@@ -118,10 +141,14 @@ export function SchemaViewerContent({
             )}
 
             <View
+                ref={reassign.wrapperRef}
+                collapsable={false}
                 style={styles.canvasWrapper}
+                {...reassign.panHandlers}
                 onLayout={e => {
                     setContainerW(e.nativeEvent.layout.width);
                     setContainerH(e.nativeEvent.layout.height);
+                    setTimeout(reassign.measureWrapper, 50);
                 }}
             >
                 {layoutLoading && (
@@ -145,17 +172,16 @@ export function SchemaViewerContent({
                                 isReadonly={true}
                                 selectOnly
 
-                                tableColorOverrides={tableColorOverrides}
+                                tableColorOverrides={reassign.highlights ? { ...tableColorOverrides, ...reassign.highlights } : tableColorOverrides}
+                                onZoomChange={s => setZoomed(s > 1)}
                                 onDeselect={() => setSelectedTableId(null)}
-                                onSelect={id => {
-                                    const obj = allObjects.find(o => o.id === id);
-                                    setSelectedTableId(obj && TABLE_TYPES.has(obj.type) ? id : null);
-                                }}
+                                onSelect={selectTable}
                                 onUpdate={() => {}}
                             />
                         </View>
                     </View>
                 )}
+                {reassign.tooltip && <TableDragTooltip {...reassign.tooltip} />}
                 {!layoutLoading && !activeFloor && (
                     <View style={styles.empty}>
                         <Ionicons name="map-outline" size={48} color={themeConfig.text.muted} />
@@ -175,6 +201,7 @@ export default function SchemaViewerModal({
     onClose,
     onPressReservation,
     onAddReservation,
+    onMoveReservation,
 }: Props) {
     const clubId = (globalThis as any).myClubs?.[0]?.id;
     const { loadLayout } = useClubData();
@@ -192,6 +219,7 @@ export default function SchemaViewerModal({
                 onClose={onClose}
                 onPressReservation={onPressReservation}
                 onAddReservation={onAddReservation}
+                onMoveReservation={onMoveReservation}
                 showCloseButton={true}
                 inModal={true}
             />

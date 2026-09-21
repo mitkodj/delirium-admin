@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    SectionList, RefreshControl, Platform, Modal, Pressable, Image, useWindowDimensions,
+    SectionList, RefreshControl, Platform, Modal, Pressable, Image, useWindowDimensions, Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -340,25 +340,31 @@ export default function Reservations() {
     const handleGone    = (item: Reservation) => updateStatus(item, ReservationStatus.GONE);
     const handleCancel    = (item: Reservation) => updateStatus(item, ReservationStatus.CANCELLED);
 
-    const handleMoveTable = async (fromId: string, toId: string) => {
-        if (!detailReservation) return;
+    const moveReservationTable = async (reservation: Reservation, fromId: string, toId: string) => {
         const clubId = (globalThis as any).myClubs?.[0]?.id;
-        const newTables = (detailReservation.tables ?? []).map(id => id === fromId ? toId : id);
-        await updateReservation(clubId, detailReservation.id, {
+        const newTables = (reservation.tables ?? []).map(id => id === fromId ? toId : id);
+        const res = await updateReservation(clubId, reservation.id, {
             discoId: clubId,
-            firstName: detailReservation.firstName,
-            lastName: detailReservation.lastName,
-            reservationDate: detailReservation.reservationDate,
+            firstName: reservation.firstName,
+            lastName: reservation.lastName,
+            reservationDate: reservation.reservationDate,
             tables: newTables,
-            phoneNumber: detailReservation.phoneNumber,
-            comment: detailReservation.comment,
-            clientsCount: detailReservation.clientsCount ?? 1,
-            status: detailReservation.status ?? ReservationStatus.OPEN,
+            phoneNumber: reservation.phoneNumber,
+            comment: reservation.comment,
+            clientsCount: reservation.clientsCount ?? 1,
+            status: reservation.status ?? ReservationStatus.OPEN,
         });
-        const updated = { ...detailReservation, tables: newTables };
-        setReservations(prev => prev.map(r => r.id === detailReservation.id ? updated : r));
-        setDetailReservation(updated);
+        if (!res) {
+            Alert.alert('Error', 'Failed to move the reservation. Please try again.');
+            return;
+        }
+        const updated = { ...reservation, tables: newTables };
+        setReservations(prev => prev.map(r => r.id === reservation.id ? updated : r));
+        setDetailReservation(prev => prev?.id === reservation.id ? updated : prev);
     };
+
+    const handleMoveTable = (fromId: string, toId: string) =>
+        detailReservation && moveReservationTable(detailReservation, fromId, toId);
 
     const handleSave = (saved: Reservation) => {
         setReservations(prev =>
@@ -495,6 +501,7 @@ export default function Reservations() {
                         tableColorOverrides={tableColorOverrides}
                         reservations={reservations}
                         showCloseButton={false}
+                        onMoveReservation={moveReservationTable}
                         onPressReservation={openDetail}
                         onAddReservation={(tableId) => {
                             setPreselectedTableId(tableId);
@@ -532,6 +539,7 @@ export default function Reservations() {
                 tableColorOverrides={tableColorOverrides}
                 reservations={reservations}
                 onClose={() => setSchemaVisible(false)}
+                onMoveReservation={moveReservationTable}
                 onPressReservation={(r) => {
                     setSchemaVisible(false);
                     openDetail(r);
