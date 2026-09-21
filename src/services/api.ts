@@ -195,6 +195,15 @@ export const createEvent = async (event: DEvent) => {
   }
 };
 
+export const deleteEvent = async (id: string) => {
+  try {
+    return await axios.delete(`${partyService}/api/events/${id}`);
+  } catch (e) {
+    console.log('deleteEvent error', e);
+    return null;
+  }
+};
+
 export type UpdateClubPayload = {
   name: string;
   locationNormalized: string;

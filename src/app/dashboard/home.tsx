@@ -7,6 +7,7 @@ import { Club, DEvent } from '../../types/Disco';
 import { useEffect, useState } from 'react';
 import { useSearchFilters } from '../../providers/SearchCriteriaContext';
 import { fetchEvents, fetchStatistics } from '../../services/api';
+import { useConfirmDeleteEvent } from '../../hooks/useConfirmDeleteEvent';
 import React from 'react';
 import adminStyles from '../../styles/adminStyles';
 import { Stack } from 'expo-router';
@@ -37,6 +38,8 @@ export default function DashboardHome() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEvent, setEditingEvent] = useState<DEvent | null>(null);
+
+  const confirmDelete = useConfirmDeleteEvent();
 
   const openEdit = (event: DEvent) => {
       setEditingEvent(event);
@@ -105,6 +108,7 @@ export default function DashboardHome() {
         onPageChange={() => { }}
         handleRefresh={handleRefresh}
         onEdit={openEdit}
+        onDelete={confirmDelete}
       />
 
       <EventFormModal

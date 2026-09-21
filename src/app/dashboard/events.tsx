@@ -10,6 +10,7 @@ import { useSearchFilters } from "../../providers/SearchCriteriaContext";
 import { useSidebar } from "../../providers/SidebarContext";
 import { DEvent } from "../../types/Disco";
 import { fetchEvents } from "../../services/api";
+import { useConfirmDeleteEvent } from "../../hooks/useConfirmDeleteEvent";
 import adminStyles from "../../styles/adminStyles";
 import themeConfig from "../../theme/themeConfig";
 
@@ -110,6 +111,10 @@ export default function Events({ perPage = 15 }: { perPage: number }) {
         setModalVisible(true);
     };
 
+    const confirmDelete = useConfirmDeleteEvent(() => {
+        if (page > 0 && events.length - 1 <= page * perPage) setPage(page - 1);
+    });
+
     const closeModal = () => {
         setModalVisible(false);
         setEditingEvent(null);
@@ -131,6 +136,7 @@ export default function Events({ perPage = 15 }: { perPage: number }) {
                 onPageChange={setPage}
                 handleRefresh={handleRefresh}
                 onEdit={openEdit}
+                onDelete={confirmDelete}
             />
 
             <EventFormModal
