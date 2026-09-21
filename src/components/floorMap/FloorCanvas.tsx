@@ -1,8 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { View, Pressable, StyleSheet, PanResponder } from 'react-native';
-import { FloorObject } from '../../../types/FloorMap';
+import { FloorObject } from '../../types/FloorMap';
 import FloorItem from './FloorItem';
-import themeConfig from '../../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 
 const GRID_SIZE = 40;
 const MIN_SCALE = 1;

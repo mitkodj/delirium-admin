@@ -9,7 +9,7 @@ import {
   Text,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { buildAssetUrl, buildAssetSource } from '../helpers/utils';
+import { buildAssetUrl, buildAssetSource } from '../../utils/helpers';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 

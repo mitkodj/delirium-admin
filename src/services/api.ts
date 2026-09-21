@@ -1,7 +1,7 @@
 import axios from "axios";
 import { GenresRequest } from "../types/RequestTypes";
 import { WizardState } from "../types/WizardTypes";
-import { buildODataQuery, eq, ge, le, and } from "./oDataQueryBuilder";
+import { buildODataQuery, eq, ge, le, and } from "../utils/oDataQueryBuilder";
 import Constants from "expo-constants";
 import { DEvent } from "../types/Disco";
 import { getStoredSession } from "./session";

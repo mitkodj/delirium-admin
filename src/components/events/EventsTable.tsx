@@ -1,10 +1,10 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AdminTable from './AdminTable';
+import AdminTable from '../common/AdminTable';
 import { formatEventDate } from '../../utils/formatDate';
 import { DEvent } from '../../types/Disco';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 
 type Props = {
     events: DEvent[];

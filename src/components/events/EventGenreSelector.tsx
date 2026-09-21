@@ -10,8 +10,8 @@ import {
     Modal,
     Pressable
 } from 'react-native'
-import themeConfig from '../../themes/themeConfig'
-import { fetchGenres } from '../../utils/service'
+import themeConfig from '../../theme/themeConfig'
+import { fetchGenres } from '../../services/api'
 import { DGenre } from '../../types/Disco'
 
 type Props = {

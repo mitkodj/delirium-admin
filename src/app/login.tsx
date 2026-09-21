@@ -14,11 +14,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, router } from 'expo-router';
-import themeConfig from '../themes/themeConfig';
-import { getMyClubs, login } from '../utils/service';
-import { saveSession } from '../utils/session';
+import themeConfig from '../theme/themeConfig';
+import { getMyClubs, login } from '../services/api';
+import { saveSession } from '../services/session';
 import { useSearchFilters } from '../providers/SearchCriteriaContext';
-import { TabletModalWrapper } from '../helpers/useTabletModalStyle';
+import { TabletModalWrapper } from '../hooks/useTabletModalStyle';
 
 export default function LoginScreen() {
 
@@ -69,7 +69,7 @@ export default function LoginScreen() {
                 <View style={styles.inner}>
 
                     <Image
-                        source={require('../../logo-ios.png')}
+                        source={require('../../assets/branding/logo-ios.png')}
                         style={styles.logo}
                     />
 

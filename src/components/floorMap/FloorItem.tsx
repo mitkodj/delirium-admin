@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Animated, View, Text, TextInput, Modal, TouchableOpacity, Pressable, PanResponder, StyleSheet } from 'react-native';
-import { FloorObject, FloorObjectType } from '../../../types/FloorMap';
-import themeConfig from '../../../themes/themeConfig';
+import { FloorObject, FloorObjectType } from '../../types/FloorMap';
+import themeConfig from '../../theme/themeConfig';
 
 const MIN_SIZE = 40;
 const HANDLE_SIZE = 14;

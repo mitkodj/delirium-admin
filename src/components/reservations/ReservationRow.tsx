@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from '@expo/vector-icons';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import { useClubData } from '../../providers/ClubDataContext';
 

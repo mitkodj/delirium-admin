@@ -3,15 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import EventsTable from "../components/EventsTable";
-import EventFormModal from "../components/EventFormModal";
-import AddButton from "../components/AddButton";
+import EventsTable from "../../components/events/EventsTable";
+import EventFormModal from "../../components/events/EventFormModal";
+import AddButton from "../../components/common/AddButton";
 import { useSearchFilters } from "../../providers/SearchCriteriaContext";
 import { useSidebar } from "../../providers/SidebarContext";
 import { DEvent } from "../../types/Disco";
-import { fetchEvents } from "../../utils/service";
-import adminStyles from "./styles/adminStyles";
-import themeConfig from "../../themes/themeConfig";
+import { fetchEvents } from "../../services/api";
+import adminStyles from "../../styles/adminStyles";
+import themeConfig from "../../theme/themeConfig";
 
 function EventsHeader({ onNew }: { onNew: () => void }) {
     const insets = useSafeAreaInsets();

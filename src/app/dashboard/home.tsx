@@ -1,14 +1,14 @@
 import { View, Text, StyleSheet } from 'react-native';
-import EventsTable from '../components/EventsTable';
-import EventFormModal from '../components/EventFormModal';
-import AdminHeader from '../components/AdminHeader';
-import themeConfig from '../../themes/themeConfig';
+import EventsTable from '../../components/events/EventsTable';
+import EventFormModal from '../../components/events/EventFormModal';
+import AdminHeader from '../../components/common/AdminHeader';
+import themeConfig from '../../theme/themeConfig';
 import { Club, DEvent } from '../../types/Disco';
 import { useEffect, useState } from 'react';
 import { useSearchFilters } from '../../providers/SearchCriteriaContext';
-import { fetchEvents, fetchStatistics } from '../../utils/service';
+import { fetchEvents, fetchStatistics } from '../../services/api';
 import React from 'react';
-import adminStyles from './styles/adminStyles';
+import adminStyles from '../../styles/adminStyles';
 import { Stack } from 'expo-router';
 
 export default function DashboardHome() {

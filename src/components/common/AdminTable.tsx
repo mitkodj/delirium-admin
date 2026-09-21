@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { DataTable } from 'react-native-paper';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 
 type Props = {
   data: any[];

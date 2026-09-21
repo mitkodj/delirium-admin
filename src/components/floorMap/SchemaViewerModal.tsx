@@ -3,11 +3,11 @@ import {
     Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import FloorCanvas from './floorMap/FloorCanvas';
-import themeConfig from '../../themes/themeConfig';
+import FloorCanvas from './FloorCanvas';
+import themeConfig from '../../theme/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation } from '../../types/Disco';
-import { ReservationRow } from './ReservationRow';
+import { ReservationRow } from '../reservations/ReservationRow';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;

@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
-import styles from '../styles/reusableStyles';
+import styles from '../../styles/reusableStyles';
 
 
 type LocationWidgetType = {

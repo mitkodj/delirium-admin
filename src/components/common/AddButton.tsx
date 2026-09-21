@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 
 type Props = {
     onPress: () => void;

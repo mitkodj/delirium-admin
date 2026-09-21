@@ -7,11 +7,11 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import themeConfig from '../../themes/themeConfig';
-import MapPickerModal from '../components/LocationSelectorModal';
-import ColorPickerModal from '../components/ColorPickerModal';
-import { uploadBanner, updateClub } from '../../utils/service';
-import { buildAssetSource } from '../../helpers/utils';
+import themeConfig from '../../theme/themeConfig';
+import MapPickerModal from '../../components/location/LocationSelectorModal';
+import ColorPickerModal from '../../components/common/ColorPickerModal';
+import { uploadBanner, updateClub } from '../../services/api';
+import { buildAssetSource } from '../../utils/helpers';
 import { Club } from '../../types/Disco';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

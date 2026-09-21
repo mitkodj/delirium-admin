@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { FloorObjectType } from '../../../types/FloorMap';
-import themeConfig from '../../../themes/themeConfig';
+import { FloorObjectType } from '../../types/FloorMap';
+import themeConfig from '../../theme/themeConfig';
 
 interface ToolItem {
   type: FloorObjectType;

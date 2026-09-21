@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet, useWindowDimensions } from "react-native"
-import themeConfig from "../../themes/themeConfig";
+import themeConfig from "../../theme/themeConfig";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSidebar } from "../../providers/SidebarContext";

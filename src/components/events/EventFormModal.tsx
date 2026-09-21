@@ -12,18 +12,18 @@ import {
     ActivityIndicator
 } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
-import themeConfig from '../../themes/themeConfig'
+import themeConfig from '../../theme/themeConfig'
 import { Switch } from 'react-native-paper'
-import DateWidget from './DateWidget'
+import DateWidget from '../common/DateWidget'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import LocationWidget from './LocationWidget'
-import LocationSelector from './LocationSelector'
-import MapPickerModal from './LocationSelectorModal'
-import { createEvent, updateEvent, uploadBanner, setEventsGenres } from '../../utils/service'
+import LocationWidget from '../location/LocationWidget'
+import LocationSelector from '../location/LocationSelector'
+import MapPickerModal from '../location/LocationSelectorModal'
+import { createEvent, updateEvent, uploadBanner, setEventsGenres } from '../../services/api'
 import { Club, DGenre } from '../../types/Disco'
-import { buildAssetSource } from '../../helpers/utils'
+import { buildAssetSource } from '../../utils/helpers'
 import GenreSelector from './EventGenreSelector'
-import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
+import { TabletModalWrapper } from '../../hooks/useTabletModalStyle';
 
 type Props = {
     visible: boolean

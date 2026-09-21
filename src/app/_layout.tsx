@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { SearchCriteriaProvider } from '../providers/SearchCriteriaContext';
-import themeStyles from '../themes/theme';
+import themeStyles from '../theme/theme';
 
 export default function RootLayout() {
     return (

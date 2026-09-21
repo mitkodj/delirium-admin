@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import Gallery from "../../components/Gallery";
+import Gallery from "../../components/gallery/Gallery";
 import { Club } from "../../types/Disco";
-import themeConfig from "../../themes/themeConfig";
+import themeConfig from "../../theme/themeConfig";
 import { StyleSheet, Dimensions, ScrollView, RefreshControl } from "react-native";
-import { fetchSuggestedClubs } from "../../utils/service";
-import adminStyles from "./styles/adminStyles";
+import { fetchSuggestedClubs } from "../../services/api";
+import adminStyles from "../../styles/adminStyles";
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const galleryImageWidth = (SCREEN_WIDTH - 140) / 2;

@@ -4,7 +4,7 @@
     "slug": "Delirium Admin",
     "version": "1.0.0",
     "orientation": "default",
-    "icon": "./logo-ios.png",
+    "icon": "./assets/branding/logo-ios.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -14,7 +14,7 @@
     "ios": {
       "supportsTablet": true,
       "requiresFullScreen": true,
-      "icon": "./logo-ios.png",
+      "icon": "./assets/branding/logo-ios.png",
       "bundleIdentifier": "com.radmit.deliriumadmin",
       "infoPlist": {
         "UIViewControllerBasedStatusBarAppearance": true,
@@ -24,7 +24,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./logo.png",
+        "foregroundImage": "./assets/branding/logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": false,
@@ -36,7 +36,7 @@
       "package": "com.delirium.admin"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/branding/favicon.png"
     },
     "plugins": [
       "expo-router",

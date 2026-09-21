@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Image, ActivityIndicator } from 'react-native';
 import { Redirect } from 'expo-router';
-import { loadSession, refreshSession, registerRefreshInterceptor } from '../utils/session';
-import { getMyClubs } from '../utils/service';
-import themeConfig from '../themes/themeConfig';
+import { loadSession, refreshSession, registerRefreshInterceptor } from '../services/session';
+import { getMyClubs } from '../services/api';
+import themeConfig from '../theme/themeConfig';
 
 export default function Index() {
     const [ready, setReady] = useState(false);
@@ -33,7 +33,7 @@ export default function Index() {
     if (!ready) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: themeConfig.background.primary }}>
-                <Image source={require('../../logo-ios.png')} style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 24 }} />
+                <Image source={require('../../assets/branding/logo-ios.png')} style={{ width: 72, height: 72, borderRadius: 16, marginBottom: 24 }} />
                 <ActivityIndicator color={themeConfig.accent.primary} size="large" />
             </View>
         );

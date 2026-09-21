@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Svg, { Path, Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 
 const N = 60;
 const DISC = 260;

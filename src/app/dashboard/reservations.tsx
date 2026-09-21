@@ -9,18 +9,18 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import themeConfig from '../../themes/themeConfig';
-import ReservationFormModal from '../components/ReservationFormModal';
-import ReservationDetailModal from '../components/ReservationDetailModal';
-import AddButton from '../components/AddButton';
-import SchemaViewerModal, { SchemaViewerContent } from '../components/SchemaViewerModal';
+import themeConfig from '../../theme/themeConfig';
+import ReservationFormModal from '../../components/reservations/ReservationFormModal';
+import ReservationDetailModal from '../../components/reservations/ReservationDetailModal';
+import AddButton from '../../components/common/AddButton';
+import SchemaViewerModal, { SchemaViewerContent } from '../../components/floorMap/SchemaViewerModal';
 import { Reservation, ReservationStatus, DEvent } from '../../types/Disco';
-import adminStyles from './styles/adminStyles';
+import adminStyles from '../../styles/adminStyles';
 import { useSidebar } from '../../providers/SidebarContext';
 import { useClubData } from '../../providers/ClubDataContext';
-import { getReservations, updateReservation, fetchEventsForDate } from '../../utils/service';
-import { ReservationRow } from '../components/ReservationRow';
-import { buildAssetSource } from '../../helpers/utils';
+import { getReservations, updateReservation, fetchEventsForDate } from '../../services/api';
+import { ReservationRow } from '../../components/reservations/ReservationRow';
+import { buildAssetSource } from '../../utils/helpers';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

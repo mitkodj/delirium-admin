@@ -1,5 +1,5 @@
-const devConfig = require("./src/utils/config/app-config.js");
-const prodConfig = require("./src/utils/config/app-config-release.js");
+const devConfig = require("./src/config/app-config.js");
+const prodConfig = require("./src/config/app-config-release.js");
 
 const isProd = process.env.PROD_BUILD === "true";
 
@@ -12,12 +12,12 @@ export default {
 
     scheme: "com.radmit.deliriumadmin",
 
-    icon: "./logo-ios.png",
+    icon: "./assets/branding/logo-ios.png",
     orientation: "default",
 
     ios: {
       bundleIdentifier: "com.radmit.deliriumadmin",
-      icon: "./logo-ios.png",
+      icon: "./assets/branding/logo-ios.png",
       supportsTablet: true,
       requireFullScreen: true,
       infoPlist: {

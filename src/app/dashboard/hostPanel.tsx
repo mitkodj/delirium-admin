@@ -3,12 +3,12 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Platform, S
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Floor, FloorObject, FloorObjectType } from '../../types/FloorMap';
-import FloorCanvas from '../components/floorMap/FloorCanvas';
-import Toolbar from '../components/floorMap/Toolbar';
-import { postLayout } from '../../utils/service';
+import FloorCanvas from '../../components/floorMap/FloorCanvas';
+import Toolbar from '../../components/floorMap/Toolbar';
+import { postLayout } from '../../services/api';
 import { useClubData } from '../../providers/ClubDataContext';
-import themeConfig from '../../themes/themeConfig';
-import adminStyles from './styles/adminStyles';
+import themeConfig from '../../theme/themeConfig';
+import adminStyles from '../../styles/adminStyles';
 
 type Mode = 'preview' | 'edit';
 

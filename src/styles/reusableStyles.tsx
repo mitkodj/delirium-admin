@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../theme/themeConfig';
 
 const styles = StyleSheet.create({
 

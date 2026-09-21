@@ -5,13 +5,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import { useClubData } from '../../providers/ClubDataContext';
-import FloorCanvas from './floorMap/FloorCanvas';
+import FloorCanvas from '../floorMap/FloorCanvas';
 import { ReservationRow } from './ReservationRow';
 import { FloorObject } from '../../types/FloorMap';
-import { useTabletModalStyle } from '../../helpers/useTabletModalStyle';
+import { useTabletModalStyle } from '../../hooks/useTabletModalStyle';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;

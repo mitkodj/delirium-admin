@@ -2,14 +2,14 @@ import React, { useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Platform, useWindowDimensions } from 'react-native';
 import { Stack, router, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import themeConfig from '../../themes/themeConfig';
+import themeConfig from '../../theme/themeConfig';
 import { PaperProvider } from 'react-native-paper';
-import { paperTheme } from '../../themes/paperTheme';
-import AdminHeader from '../components/AdminHeader';
+import { paperTheme } from '../../theme/paperTheme';
+import AdminHeader from '../../components/common/AdminHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SidebarProvider, useSidebar } from '../../providers/SidebarContext';
 import { ClubDataProvider } from '../../providers/ClubDataContext';
-import { logout } from '../../utils/service';
+import { logout } from '../../services/api';
 
 
 const ROUTE_TITLE_MAP: any = {

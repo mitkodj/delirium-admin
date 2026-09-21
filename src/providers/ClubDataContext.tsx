@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Floor } from '../types/FloorMap';
-import { getLayout } from '../utils/service';
+import { getLayout } from '../services/api';
 
 type ClubDataContextType = {
     floors: Floor[];

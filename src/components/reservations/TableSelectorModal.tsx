@@ -3,10 +3,10 @@ import {
     Modal, View, Text, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import FloorCanvas from './floorMap/FloorCanvas';
-import themeConfig from '../../themes/themeConfig';
+import FloorCanvas from '../floorMap/FloorCanvas';
+import themeConfig from '../../theme/themeConfig';
 import { useClubData } from '../../providers/ClubDataContext';
-import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
+import { TabletModalWrapper } from '../../hooks/useTabletModalStyle';
 
 const CANVAS_W = 900;
 const CANVAS_H = 600;

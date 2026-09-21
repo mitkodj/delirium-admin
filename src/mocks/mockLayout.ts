@@ -1,4 +1,4 @@
-import { Floor, FloorObject } from '../../../types/FloorMap';
+import { Floor, FloorObject } from '../types/FloorMap';
 
 /**
  * Seed layout for development.

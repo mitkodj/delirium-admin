@@ -13,12 +13,12 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import themeConfig from '../../themes/themeConfig';
-import { createReservation, updateReservation, fetchContactsByPhone, CreateReservationPayload, ReservationContact } from '../../utils/service';
+import themeConfig from '../../theme/themeConfig';
+import { createReservation, updateReservation, fetchContactsByPhone, CreateReservationPayload, ReservationContact } from '../../services/api';
 import { useClubData } from '../../providers/ClubDataContext';
 import { Reservation, ReservationStatus } from '../../types/Disco';
 import TableSelectorModal from './TableSelectorModal';
-import { TabletModalWrapper } from '../../helpers/useTabletModalStyle';
+import { TabletModalWrapper } from '../../hooks/useTabletModalStyle';
 
 const PHONE_RE = /^\+?[\d\s\-().]{7,20}$/;
 
