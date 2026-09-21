@@ -248,15 +248,16 @@ export default function Reservations() {
 
     useEffect(() => { loadLayout(clubId); }, [clubId]);
 
-    const fetchEvents = async () => {
-        const clubId = (globalThis as any).myClubs?.[0]?.id;
-        const events = await fetchEventsForDate(selectedDate, clubId) as any;
-        setCurrentEvent((events.data as any)[0] ?? null);
+    const fetchEvents = async (date: Date) => {
+        const events = await fetchEventsForDate(date, clubId) as any;
+        return (events?.data?.[0] ?? null) as DEvent | null;
     };
 
     useEffect(() => {
-        fetchEvents();
-    }, [pendingDate]);
+        let stale = false;
+        fetchEvents(pendingDate).then(event => { if (!stale) setCurrentEvent(event); });
+        return () => { stale = true; };
+    }, [pendingDate.getTime()]);
 
     const [refreshing, setRefreshing] = useState(false);
 

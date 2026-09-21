@@ -23,6 +23,9 @@ export function buildODataQuery(query: ODataQuery) {
 export const eq = (field: string, value: string | number) =>
   `${field} eq '${value}'`
 
+export const eqGuid = (field: string, value: string) =>
+  `${field} eq ${value}`
+
 export const ge = (field: string, value: string | number) =>
   `${field} ge ${value}`
 
