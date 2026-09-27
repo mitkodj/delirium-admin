@@ -37,6 +37,9 @@ export default function LoginScreen() {
             setLoading(true);
 
             const loginData = await login(username, password);
+            //TODO make something about these unhandled errors,
+            // maybe a toast or something.
+            // For now, just throw an error if login fails
             if (!loginData) throw new Error('Login failed');
 
             const session = await saveSession(loginData);

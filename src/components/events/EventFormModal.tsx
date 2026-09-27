@@ -69,17 +69,15 @@ export default function EventFormModal({
     };
 
     useEffect(() => {
-        if (event) {
-            setName(event.name ?? '')
-            setEntrance(event.entranceFee ?? '')
-            setDescription(event.description ?? '')
-            setPromotions(event.promotions ?? '')
-            setBanner(buildAssetSource(event.banner) ?? null)
-            setBannerChanged(false)
-            setLocation(event.location ?? { ...club?.location, address: club?.locationNormalized })
-            if (event.date) setDate(new Date(event.date))
-            if (event.genres?.length) setGenres(event.genres.map((g: string) => ({ id: g })))
-        }
+        setName(event?.name ?? '')
+        setEntrance(event?.entranceFee ?? '')
+        setDescription(event?.description ?? '')
+        setPromotions(event?.promotions ?? '')
+        setBanner(buildAssetSource(event?.banner) ?? null)
+        setBannerChanged(false)
+        setLocation(event?.location ?? { ...club?.location, address: club?.locationNormalized })
+        if (event?.date) setDate(new Date(event.date))
+        if (event?.genres?.length) setGenres(event.genres.map((g: string) => ({ id: g })))
     }, [event])
 
     const handleSave = async () => {
