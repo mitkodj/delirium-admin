@@ -8,15 +8,17 @@ type LocationWidgetType = {
     address: string,
     accentColor: string;
     openMaps: () => void;
+    style?: object;
 };
 
 export default function LocationWidget({
     address,
     accentColor,
-    openMaps
+    openMaps,
+    style
 }: LocationWidgetType) {
     return (
-        <TouchableOpacity style={[styles.squareButton, styles.dateButton, { borderColor: accentColor }]} onPress={openMaps}>
+        <TouchableOpacity style={[styles.squareButton, styles.dateButton, { borderColor: accentColor }, style]} onPress={openMaps}>
             <View style={styles.locationContent}>
                 <MaterialIcons name="location-pin" size={30} color={accentColor} style={{ marginBottom: 4 }} />
                 <Text

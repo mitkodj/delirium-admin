@@ -223,13 +223,12 @@ export default function EventFormModal({
 
                     <View style={{
                         flexDirection: 'row',
-                        marginBottom: 10,
-                        height: 116
+                        marginBottom: 10
                     }}>
                         <DateWidget
                             style={{
-                                maxHeight: 116,
-                                aspectRatio: 1
+                                flex: 0,
+                                width: 120
                             }}
                             day={date.getDate()}
                             month={date.toLocaleString('default', { month: 'long' })}
@@ -263,6 +262,10 @@ export default function EventFormModal({
                         height: 116
                     }}>
                         <LocationWidget
+                            style={{
+                                flex: 0,
+                                width: 120
+                            }}
                             address={location?.address}
                             accentColor={club?.accentColor ?? accentColor}
                             openMaps={() => { }}
